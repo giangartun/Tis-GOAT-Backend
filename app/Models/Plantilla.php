@@ -27,8 +27,9 @@ class Plantilla extends Model
         return ['id_plantilla'];
     }
 
-    public function plantilla_portafolio()
+    public function portafolios()
     {
-        return $this->hasMany(PlantillaProyecto::class, "id_plantilla"); 
+        // Relación 1:N (Una plantilla -> Muchos portafolios)
+        return $this->hasMany(Portafolio::class, 'id_plantilla');
     }
 }

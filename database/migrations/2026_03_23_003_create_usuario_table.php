@@ -9,16 +9,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('usuario', function (Blueprint $table) {
-            $table->string('id_usuario')->primary();
-            $table->string('correo')->unique();
+            $table->string('id_usuario')->primary(); // ULID
+            $table->string('email')->unique();
             $table->string('contrasena');
             $table->string('nombre');
-            $table->string('profesion')->nullable();
+            $table->string('apellido_paterno');
+            $table->string('apellido_materno');
             $table->text('biografia')->nullable();
-            $table->string('foto_url')->nullable();
-            $table->boolean('activo')->default(true);
-            $table->timestamp('fecha_creado')->nullable();
-            $table->timestamp('fecha_actualizacion')->nullable();
+            $table->string('foto')->nullable();
+            $table->timestamp('fecha')->useCurrent(); // Fecha y hora de creación automática
         });
     }
 

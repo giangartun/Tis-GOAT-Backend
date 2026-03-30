@@ -9,20 +9,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('portafolio', function (Blueprint $table) {
-            $table->string('id_portafolio')->primary();
-            $table->string('titulo');
-            $table->text('descripcion')->nullable();
-            $table->boolean('publicado')->default(false);
+        $table->string('id_portafolio')->primary();
+            
+            // Regla: 1 Usuario = 1 Portafolio
+            $table->string('id_usuario')->unique(); 
+            $table->string('id_plantilla')->nullable();
+            
             $table->string('slug')->unique();
-            $table->timestamp('fecha_creado')->nullable();
-            $table->timestamp('fecha_actualizacion')->nullable();
-            $table->string('id_usuario');
+            
+            // Usamos timestamp para mayor precisión en Neon.tech
+            $table->timestamp('creado_en')->useCurrent();
+            $table->timestamp('fecha_act')->useCurrent()->useCurrentOnUpdate();
 
-            // Foreign Key
-            $table->foreign('id_usuario')
-                ->references('id_usuario')
-                ->on('usuario')
-                ->onDelete('cascade');
+        // Llaves foráneas
+            $table->foreign('id_usuario')->references('id_usuario')->on('usuario')->onDelete('cascade');
+            $table->foreign('id_plantilla')->references('id_plantilla')->on('plantilla')->onDelete('set null');
         });
     }
 

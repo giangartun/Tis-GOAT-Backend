@@ -17,19 +17,16 @@ class Portafolio extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'titulo',
-        'descripcion',
-        'publicado',
+        'id_usuario',
+        'id_plantilla',
         'slug',
-        'fecha_creado',
-        'fecha_actualizacion',
-        'id_usuario'
+        'creado_en',
+        'fecha_act',        
     ];
 
     protected $casts = [
-        'publicado' => 'boolean',
-        'fecha_creado' => 'date',
-        'fecha_actualizacion' => 'date',
+        'creado_en' => 'datetime',
+        'fecha_act' => 'datetime',
     ];
 
     public function uniqueIds(): array
@@ -38,38 +35,40 @@ class Portafolio extends Model
     }
 
     // 🔹 RELACIONES
-    // Un portafolio pertenece a un usuario
+
+    // Un portafolio pertenece a un usuario (1:1 definido en Usuario)
     public function usuario()
     {
         return $this->belongsTo(Usuario::class, 'id_usuario');
     }
 
-    public function portafolios_plantilla()
+    // El portafolio usa una plantilla
+    public function plantilla()
     {
-        return $this->hasMany(PlantillaProyecto::class, "id_portafolio"); 
+        return $this->belongsTo(Plantilla::class, 'id_plantilla');
     }
 
-    // Un portafolio tiene muchas experiencias laborales
+    // Un portafolio tiene muchos proyectos
+    public function proyectos()
+    {
+        return $this->hasMany(Proyecto::class, 'id_portafolio');
+    }
+
+    // Un portafolio incluye muchas habilidades
+    public function habilidades()
+    {
+        return $this->hasMany(Habilidad::class, 'id_portafolio');
+    }
+
+    // Un portafolio publica muchas experiencias laborales
     public function experienciasLaborales()
     {
         return $this->hasMany(ExperienciaLaboral::class, 'id_portafolio');
     }
 
-    // Un portafolio tiene muchas experiencias académicas
+    // Un portafolio publica muchas experiencias académicas
     public function experienciasAcademicas()
     {
         return $this->hasMany(ExperienciaAcademica::class, 'id_portafolio');
-    }
-
-    // Muchos a muchos con habilidades
-    public function proyecto_habilidad()
-    {
-        return $this->hasMany(PortafolioHabilidad::class, 'id_portafolio');
-    }
-
-    // Un portafolio tiene muchos proyectos (según tu diagrama)
-    public function proyectos()
-    {
-        return $this->hasMany(Proyecto::class, 'id_portafolio');
     }
 }

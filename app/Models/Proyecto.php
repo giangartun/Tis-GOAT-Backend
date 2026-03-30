@@ -19,21 +19,18 @@ class Proyecto extends Model
     protected $fillable = [
         'nombre',
         'descripcion',
-        'url_repositorio',
-        'url_demo',
+        'url_proyecto',
         'imagen_url',
         'fecha_ini',
         'fecha_fin',
-        'visible',
-        'fecha_creado',
+        'creado_en',
         'id_portafolio'
     ];
 
     protected $casts = [
         'fecha_ini' => 'date',
         'fecha_fin' => 'date',
-        'fecha_creado' => 'date',
-        'visible' => 'boolean',
+        'creado_en' => 'datetime',
     ];
 
     public function uniqueIds(): array
@@ -41,23 +38,28 @@ class Proyecto extends Model
         return ['id_proyecto'];
     }
 
+// 🔹 RELACIONES
+
+    // Un proyecto pertenece a un portafolio específico
     public function portafolio()
     {
         return $this->belongsTo(Portafolio::class, 'id_portafolio');
     }
 
-    public function enlaces()
+    // Relación Muchos a Muchos con Tecnología (Usa la tabla intermedia)
+    public function tecnologias()
     {
-        return $this->hasMany(EnlaceProyecto::class, 'id_proyecto');
+        return $this->belongsToMany(
+            Tecnologia::class, 
+            'proyecto_tecnologia', // Nombre de la tabla intermedia
+            'id_proyecto',         // FK de Proyecto en la intermedia
+            'id_tecnologia'        // FK de Tecnologia en la intermedia
+        )->withPivot('tipo'); // <--- Acceso al campo extra;
     }
 
+    // Un proyecto puede tener varias evidencias (fotos/capturas)
     public function evidencias()
     {
         return $this->hasMany(Evidencia::class, 'id_proyecto');
-    }
-
-    public function proyecto_tecnologias()
-    {
-        return $this->hasMany(ProyectoTecnologia::class, 'id_proyecto');
     }
 }

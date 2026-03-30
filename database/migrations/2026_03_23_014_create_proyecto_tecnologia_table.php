@@ -12,9 +12,10 @@ return new class extends Migration
             $table->string('id_proyecto_tecnologia')->primary();
             $table->string('id_proyecto');
             $table->string('id_tecnologia');
+            $table->string('tipo')->nullable();
 
             // Evita duplicados (misma relación repetida)
-            $table->unique(['id_proyecto', 'id_tecnologia']);
+            $table->unique(['id_proyecto', 'id_tecnologia', 'tipo'], 'proy_tec_tipo_unique');
 
             // Foreign Keys
             $table->foreign('id_proyecto')

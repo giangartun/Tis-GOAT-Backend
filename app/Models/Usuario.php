@@ -17,15 +17,14 @@ class Usuario extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'correo',
+        'email', //esta asi en el modelo
         'contrasena',
         'nombre',
-        'profesion',
+        'apellido_paterno',
+        'apellido_materno',
         'biografia',
-        'foto_url',
-        'activo',
-        'fecha_creado',
-        'fecha_actualizacion'
+        'foto', // igual asi en el modelo
+        'fecha'
     ];
 
     protected $hidden = [
@@ -33,9 +32,7 @@ class Usuario extends Model
     ];
 
     protected $casts = [
-        'activo' => 'boolean',
-        'fecha_creado' => 'datetime',
-        'fecha_actualizacion' => 'datetime',
+        'fecha' => 'datetime',
     ];
 
     public function uniqueIds(): array
@@ -43,6 +40,7 @@ class Usuario extends Model
         return ['id_usuario'];
     }
 
+    // Relaciones basadas en el modelo ER
     public function registrosActividad()
     {
         return $this->hasMany(RegistroActividad::class, 'id_usuario');
@@ -53,8 +51,8 @@ class Usuario extends Model
         return $this->hasMany(RedesProfesionales::class, 'id_usuario');
     }
 
-    public function portafolios()
+    public function portafolio()
     {
-        return $this->hasMany(Portafolio::class, 'id_usuario');
+        return $this->hasOne(Portafolio::class, 'id_usuario');
     }
 }

@@ -20,7 +20,6 @@ class RedesProfesionales extends Model
         'id_usuario',
         'nombre_red',
         'url',
-        'visible',
         'id_usuario',
     ];
 
@@ -28,10 +27,6 @@ class RedesProfesionales extends Model
     {
         return ['id_redes_prof'];
     }
-
-    protected $casts = [
-        'visible' => 'boolean',
-    ];
 
     public function usuario()
     {

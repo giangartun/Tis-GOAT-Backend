@@ -22,17 +22,13 @@ class ExperienciaLaboral extends Model
         'descripcion',
         'fecha_ini',
         'fecha_fin',
-        'actual',
-        'visible',
         'id_portafolio'
     ];
 
     protected $casts = [
         'fecha_ini' => 'date',
         'fecha_fin' => 'date',
-        'actual' => 'boolean',
-        'visible' => 'boolean',
-    ];
+        ];
 
     public function uniqueIds(): array
     {

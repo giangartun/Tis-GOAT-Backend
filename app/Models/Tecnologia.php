@@ -25,9 +25,16 @@ class Tecnologia extends Model
     {
         return ['id_tecnologia'];
     }
-
-    public function tecnologias_proyecto()
+/**
+     * Una tecnología puede estar presente en muchos proyectos.
+     */
+    public function proyectos()
     {
-        return $this->hasMany(ProyectoTecnologia::class, 'id_tecnologia');
+        return $this->belongsToMany(
+            Proyecto::class, 
+            'proyecto_tecnologia', 
+            'id_tecnologia', 
+            'id_proyecto'
+        )->withPivot('tipo');
     }
 }

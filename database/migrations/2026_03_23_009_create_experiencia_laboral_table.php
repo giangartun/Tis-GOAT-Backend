@@ -15,10 +15,9 @@ return new class extends Migration
             $table->text('descripcion')->nullable();
             $table->date('fecha_ini');
             $table->date('fecha_fin')->nullable();
-            $table->boolean('actual')->default(false);
-            $table->boolean('visible')->default(true);
             $table->string('id_portafolio');
 
+            // Relación con Portafolio
             $table->foreign('id_portafolio')
                 ->references('id_portafolio')
                 ->on('portafolio')

@@ -33,8 +33,9 @@ class Habilidad extends Model
         return ['id_habilidad'];
     }
 
-    public function habilidad_portafolio()
+// RELACIÓN: Una habilidad pertenece a un portafolio
+    public function portafolio()
     {
-        return $this->hasMany(PortafolioHabilidad::class, 'id_habilidad');
+        return $this->belongsTo(Portafolio::class, 'id_portafolio');
     }
 }

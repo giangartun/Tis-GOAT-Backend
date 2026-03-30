@@ -22,14 +22,12 @@ class ExperienciaAcademica extends Model
         'descripcion',
         'fecha_ini',
         'fecha_fin',
-        'visible',
         'id_portafolio'
     ];
 
     protected $casts = [
         'fecha_ini' => 'date',
         'fecha_fin' => 'date',
-        'visible' => 'boolean',
     ];
 
     public function uniqueIds(): array

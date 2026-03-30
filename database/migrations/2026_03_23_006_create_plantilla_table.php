@@ -9,10 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('plantilla', function (Blueprint $table) {
-            $table->string('id_plantilla')->primary();
+            $table->string('id_plantilla')->primary(); //ULID
             $table->string('nombre');
             $table->text('descripcion')->nullable();
-            $table->string('url_vista');
+            $table->string('url_vista')->nullable();
         });
     }
 

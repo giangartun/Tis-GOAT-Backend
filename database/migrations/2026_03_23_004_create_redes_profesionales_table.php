@@ -13,7 +13,6 @@ return new class extends Migration
             $table->string('id_usuario');
             $table->string('nombre_red');
             $table->string('url');
-            $table->boolean('visible')->default(true);
 
             // Foreign Key
             $table->foreign('id_usuario')

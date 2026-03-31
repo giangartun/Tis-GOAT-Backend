@@ -140,6 +140,7 @@ php artisan migrate:rollback     # Deshacer último batch
 | Documento | Descripción |
 |---|---|
 | [📋 Especificaciones Backend](./ESPECIFICACIONES_BACKENDv2.md) | Especificaciones técnicas del sistema |
+| [📋 Especificaciones Endpoints Backend](./ESPECIFICACIONES_ENDPOINTS.md) | Especificaciones técnicas del backend |
 | [📊 Métricas de Commits](./METRICAS_COMMITS.md) | Registro y métricas del equipo |
 
 ---

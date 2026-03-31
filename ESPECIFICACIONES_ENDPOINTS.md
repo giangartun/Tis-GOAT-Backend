@@ -4,7 +4,10 @@
 ```
 http://127.0.0.1:8000/api
 ```
-
+Comando de instalacion de entorno de apip para php:
+```
+php artisan install:api
+```
 ---
 
 ## 1. Registro de Usuario

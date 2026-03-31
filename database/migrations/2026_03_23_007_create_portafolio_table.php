@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('id_usuario')->unique(); 
             $table->string('id_plantilla')->nullable();
             
-            $table->string('slug')->unique();
+            $table->string('enlace_pagi_web')->unique();
             
             // Usamos timestamp para mayor precisión en Neon.tech
             $table->timestamp('creado_en')->useCurrent();

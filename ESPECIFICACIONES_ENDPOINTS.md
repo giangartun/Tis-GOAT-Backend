@@ -8,6 +8,12 @@ Comando de instalacion de entorno de apip para php:
 ```
 php artisan install:api
 ```
+
+Comando para ver los endpoints activos en el backend:
+```
+php artisan route:list
+```
+
 ---
 
 ## 1. Registro de Usuario

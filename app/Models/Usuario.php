@@ -55,4 +55,9 @@ class Usuario extends Model
     {
         return $this->hasOne(Portafolio::class, 'id_usuario');
     }
+
+    public function tokens()
+    {
+        return $this->morphMany(PersonalAccessToken::class, 'tokenable');
+    }
 }

@@ -12,7 +12,7 @@ Route::prefix('usuario')->group(function () {
 
 
     // Prefijo opcional para organizar mejor
-Route::prefix('gestion-proyectos')->group(function () {
+    Route::prefix('gestion-proyectos')->group(function () {
     Route::get('/{id_portafolio}', [ProyectoController::class, 'index']);    // Listar
     Route::post('/', [ProyectoController::class, 'store']);                 // Crear
     Route::put('/{id}', [ProyectoController::class, 'update']);             // Editar

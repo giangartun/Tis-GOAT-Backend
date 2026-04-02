@@ -24,6 +24,8 @@ class UsuarioController extends Controller
             'apellido_materno' => 'required|string|max:100',
             'biografia'        => 'nullable|string',
             'foto'             => 'nullable|string',
+        ], [
+            'email.unique'        => 'Este correo ya está registrado.'
         ]);
 
         if ($validator->fails()) {
@@ -82,12 +84,16 @@ class UsuarioController extends Controller
         return response()->json(['message' => 'Email verificado. Ya puedes iniciar sesión.'], 201);
     }
 
-    // Valida credenciales del usuario registrado
+    // Valida credenciales y devuelve token de sesión (solo el token debe validarse en cada peticion que le llege)
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'email'     => 'required|email',
+            'email'      => 'required|email',
             'contrasena' => 'required'
+        ], [
+            'email.required'      => 'El correo es obligatorio.',
+            'email.email'         => 'El formato del correo no es válido.',
+            'contrasena.required' => 'La contraseña es obligatoria.',
         ]);
 
         if ($validator->fails()) {
@@ -100,9 +106,19 @@ class UsuarioController extends Controller
             return response()->json(['message' => 'Credenciales incorrectas'], 401);
         }
 
+        // Elimina todos los tokens anteriores → cierra sesiones en otros dispositivos
+        $usuario->tokens()->delete();
+
+        $token = $usuario->createToken('sesion', ['*'], now()->addDays(7))->plainTextToken;
+
         return response()->json([
             'message' => 'Login exitoso',
-            'usuario' => $usuario
+            'token'   => $token,
+            'usuario' => [
+                'id_usuario' => $usuario->id_usuario,
+                'nombre'     => $usuario->nombre,
+                'email'      => $usuario->email,
+            ]
         ], 200);
     }
 }

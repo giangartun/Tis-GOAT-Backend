@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Laravel\Sanctum\HasApiTokens;
 
 class Usuario extends Model
 {
-    use HasFactory, HasUlids;
+     use HasFactory, HasUlids, HasApiTokens;
 
     protected $table = 'usuario';
     protected $primaryKey = 'id_usuario';

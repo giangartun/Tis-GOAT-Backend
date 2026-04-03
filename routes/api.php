@@ -19,6 +19,7 @@ Route::prefix('usuario')->group(function () {
         //TODOS LOS ENDPOINTS AQUÍ DENTRO, RECOMENDABLE USAR PREFIX PARA ORGANIZAR POR SECCIÓN                                                                                 
         // Proyectos 
         // URL que será es: api/usuario/proyecto/gestion-proyectos
+        /*
             Route::prefix('proyecto/gestion-proyectos')->group(function () {
             Route::get('/{id_portafolio}', [ProyectoController::class, 'index']);
             Route::post('/', [ProyectoController::class, 'store']);
@@ -26,12 +27,44 @@ Route::prefix('usuario')->group(function () {
             Route::delete('/{id}', [ProyectoController::class, 'destroy']);
         });
 
+        */
+
         // Habilidades
+        /*
         Route::get('/habilidades/{id_portafolio}', [HabilidadController::class, 'index']);
         Route::post('/habilidades', [HabilidadController::class, 'store']);
         Route::get('/habilidades/{id}', [HabilidadController::class, 'show']);
         Route::put('/habilidades/{id}', [HabilidadController::class, 'update']);
         Route::delete('/habilidades/{id}', [HabilidadController::class, 'destroy']);
+        */
+    });
+});
+
+
+/**
+ * PUEDE QUE ALGUNAS RUTAS O ENDPOINTS NO QUIERAN SI O SI DE UN TOKEN DE USUARIO (CAPAS PARA RELLENAR UN SELECTOR DE OPCIONES), POR ESO
+ * SE DEBE ANALIZAR CUAL REQUIERE SI UN TOKEN Y CUALES NO, ES MAS CONTROL INTERNO Y DE QUE ES LO QUE REALMENTE QUIERE SU FROTEND
+ */
+
+
+// --- Rutas de Habilidad ---
+Route::prefix('habilidad')->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/{id_portafolio}', [HabilidadController::class, 'index']);
+        Route::post('/', [HabilidadController::class, 'store']);
+        Route::get('/{id}', [HabilidadController::class, 'show']);
+        Route::put('/{id}', [HabilidadController::class, 'update']);
+        Route::delete('/{id}', [HabilidadController::class, 'destroy']);
+    });
+});
+
+// --- Rutas de Proyecto ---
+Route::prefix('proyecto/gestion-proyectos')->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/{id_portafolio}', [ProyectoController::class, 'index']);
+        Route::post('/', [ProyectoController::class, 'store']);
+        Route::put('/{id}', [ProyectoController::class, 'update']);
+        Route::delete('/{id}', [ProyectoController::class, 'destroy']);
     });
 });
 

@@ -16,6 +16,16 @@ Route::prefix('usuario')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [UsuarioController::class, 'logout']);
 
+        //TODOS LOS ENDPOINTS AQUÍ DENTRO, RECOMENDABLE USAR PREFIX PARA ORGANIZAR POR SECCIÓN                                                                                 
+        // Proyectos 
+        // URL que será es: api/usuario/proyecto/gestion-proyectos
+            Route::prefix('proyecto/gestion-proyectos')->group(function () {
+            Route::get('/{id_portafolio}', [ProyectoController::class, 'index']);
+            Route::post('/', [ProyectoController::class, 'store']);
+            Route::put('/{id}', [ProyectoController::class, 'update']);
+            Route::delete('/{id}', [ProyectoController::class, 'destroy']);
+        });
+
         // Habilidades
         Route::get('/habilidades/{id_portafolio}', [HabilidadController::class, 'index']);
         Route::post('/habilidades', [HabilidadController::class, 'store']);
@@ -25,10 +35,4 @@ Route::prefix('usuario')->group(function () {
     });
 });
 
-// --- Rutas de Gestión de Proyectos (SEPARADAS) ---
-Route::prefix('gestion-proyectos')->group(function () {
-    Route::get('/{id_portafolio}', [ProyectoController::class, 'index']);    // Listar
-    Route::post('/', [ProyectoController::class, 'store']);                 // Crear
-    Route::put('/{id}', [ProyectoController::class, 'update']);             // Editar
-    Route::delete('/{id}', [ProyectoController::class, 'destroy']);          // Eliminar
-});
+

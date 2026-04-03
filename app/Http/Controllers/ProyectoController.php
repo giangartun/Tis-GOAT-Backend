@@ -21,19 +21,29 @@ class ProyectoController extends Controller
     // AGREGAR: Crea el proyecto y vincula tecnologías
     public function store(ProyectoStoreRequest $request)
     {
-        $datos = $request->validated();
-        $datos['creado_en'] = now(); // Seteamos la fecha de creación
+    $datos = $request->validated();
+    $datos['id_proyecto'] = (string) \Illuminate\Support\Str::ulid(); // Generamos el ID del proyecto
+    $datos['creado_en'] = now();
 
-        $proyecto = Proyecto::create($datos);
+    $proyecto = Proyecto::create($datos);
 
-        if ($request->has('tecnologias')) {
-            $proyecto->tecnologias()->attach($request->tecnologias);
+    if ($request->has('tecnologias') && !empty($request->tecnologias)) {
+        // Preparamos los datos para la tabla intermedia con sus propios IDs
+        $tecnologiasConId = [];
+        foreach ($request->tecnologias as $tecId) {
+            $tecnologiasConId[$tecId] = [
+                'id_proyecto_tecnologia' => (string) \Illuminate\Support\Str::ulid()
+            ];
         }
+        
+        // Usamos sync o attach pasando los IDs adicionales
+        $proyecto->tecnologias()->attach($tecnologiasConId);
+    }
 
-        return response()->json([
-            'message' => 'Proyecto creado exitosamente',
-            'data' => $proyecto->load('tecnologias')
-        ], 201);
+    return response()->json([
+        'message' => 'Proyecto creado exitosamente',
+        'data' => $proyecto->load('tecnologias')
+    ], 201);
     }
 
     // EDITAR: Actualiza datos y sincroniza tecnologías
@@ -44,9 +54,15 @@ class ProyectoController extends Controller
         $proyecto->update($request->validated());
 
         if ($request->has('tecnologias')) {
-            // sync() es mejor que attach() en edición: quita las viejas y pone las nuevas
-            $proyecto->tecnologias()->sync($request->tecnologias);
-        }
+    $tecnologiasConId = [];
+    foreach ($request->tecnologias as $tecId) {
+        $tecnologiasConId[$tecId] = [
+            'id_proyecto_tecnologia' => (string) \Illuminate\Support\Str::ulid()
+        ];
+    }
+    // sync() borrará las viejas y pondrá las nuevas con sus nuevos IDs
+    $proyecto->tecnologias()->sync($tecnologiasConId);
+}
 
         return response()->json([
             'message' => 'Proyecto actualizado correctamente',

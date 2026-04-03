@@ -19,7 +19,7 @@ class RedesProfesionales extends Model
     protected $fillable = [
         'id_usuario',
         'nombre_red',
-        'url',
+        'url_red',
         'id_usuario',
     ];
 

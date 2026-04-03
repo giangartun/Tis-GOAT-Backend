@@ -19,7 +19,7 @@ class Portafolio extends Model
     protected $fillable = [
         'id_usuario',
         'id_plantilla',
-        'slug',
+        'enlace_pagi_web',
         'creado_en',
         'fecha_act',        
     ];

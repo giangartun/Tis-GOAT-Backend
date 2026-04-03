@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Laravel\Sanctum\HasApiTokens;
 
 class Usuario extends Model
 {
-    use HasFactory, HasUlids;
+     use HasFactory, HasUlids, HasApiTokens;
 
     protected $table = 'usuario';
     protected $primaryKey = 'id_usuario';
@@ -54,5 +55,10 @@ class Usuario extends Model
     public function portafolio()
     {
         return $this->hasOne(Portafolio::class, 'id_usuario');
+    }
+
+    public function tokens()
+    {
+        return $this->morphMany(PersonalAccessToken::class, 'tokenable');
     }
 }

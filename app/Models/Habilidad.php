@@ -17,10 +17,12 @@ class Habilidad extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'id_habilidad',
         'nombre',
         'tipo',
         'nivel',
-        'visible'
+        'visible',
+        'id_portafolio' // 👈 FALTABA ESTO
     ];
 
     protected $casts = [
@@ -33,7 +35,7 @@ class Habilidad extends Model
         return ['id_habilidad'];
     }
 
-// RELACIÓN: Una habilidad pertenece a un portafolio
+    // RELACIÓN: Una habilidad pertenece a un portafolio
     public function portafolio()
     {
         return $this->belongsTo(Portafolio::class, 'id_portafolio');

@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\HabilidadController;
+use App\Http\Controllers\RedesProfesionalesController;
+
 
 // --- Rutas de Usuario ---
 Route::prefix('usuario')->group(function () {
@@ -55,6 +57,17 @@ Route::prefix('habilidad')->group(function () {
         Route::get('/{id}', [HabilidadController::class, 'show']);
         Route::put('/{id}', [HabilidadController::class, 'update']);
         Route::delete('/{id}', [HabilidadController::class, 'destroy']);
+    });
+});
+
+// --- Rutas de Redes Profesionales ---
+Route::prefix('redes-profesionales')->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/{id_portafolio}', [RedesProfesionalesController::class, 'index']);
+        Route::post('/', [RedesProfesionalesController::class, 'store']);
+        Route::get('/detalle/{id}', [RedesProfesionalesController::class, 'show']);
+        Route::put('/{id}', [RedesProfesionalesController::class, 'update']);
+        Route::delete('/{id}', [RedesProfesionalesController::class, 'destroy']);
     });
 });
 

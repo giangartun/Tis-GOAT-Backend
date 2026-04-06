@@ -3,7 +3,7 @@
 @section('contenido')
     <h2>Hola, {{ $nombre }} 😁</h2>
     <p>Gracias por registrarte. Para completar tu registro verifica tu correo haciendo clic en el botón:</p>
-    <a href="{{ config('app.url') }}/api/usuario/verificar-email/{{ $token }}" class="btn">
+    <a href="{{ config('app.frontend_url') }}/verificar-email/{{ $token }}" class="btn">
         Verificar mi correo
     </a>
     <p style="margin-top: 24px; font-size: 13px; color: #888;">

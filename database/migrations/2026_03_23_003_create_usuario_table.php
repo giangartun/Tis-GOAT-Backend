@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('apellido_materno');
             $table->text('biografia')->nullable();
             $table->string('foto')->nullable();
-            $table->timestamp('fecha')->useCurrent(); // Fecha y hora de creación automática
+            $table->timestamp('fecha')->nullable(); // Fecha y hora de creación automática
         });
     }
 

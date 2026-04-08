@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('enlace_pagi_web')->unique();
             
             // Usamos timestamp para mayor precisión en Neon.tech
-            $table->timestamp('creado_en')->useCurrent();
-            $table->timestamp('fecha_act')->useCurrent()->useCurrentOnUpdate();
+            $table->timestamp('creado_en')->nullable();
+            $table->timestamp('fecha_act')->nullable();
 
         // Llaves foráneas
             $table->foreign('id_usuario')->references('id_usuario')->on('usuario')->onDelete('cascade');

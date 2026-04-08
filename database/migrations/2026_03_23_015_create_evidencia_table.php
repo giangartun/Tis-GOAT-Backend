@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('nombre_archivo');
             $table->boolean('foto_url')->default(false);
             $table->bigInteger('tamano_bytes')->nullable();
-            $table->date('fecha_subida');
+            $table->timestamp('fecha_subida')->nullable();
             $table->string('id_proyecto');
 
             $table->foreign('id_proyecto')

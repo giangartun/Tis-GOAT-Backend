@@ -19,7 +19,7 @@ $table->string('id_proyecto')->primary();
             
             $table->date('fecha_ini')->nullable();
             $table->date('fecha_fin')->nullable();
-            $table->timestamp('creado_en')->useCurrent();
+            $table->timestamp('creado_en')->nullable();
 
             // Llave foránea: Si se borra el portafolio, se borran sus proyectos
             $table->foreign('id_portafolio')

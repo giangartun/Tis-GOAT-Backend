@@ -63,11 +63,10 @@ Route::prefix('habilidad')->group(function () {
 // --- Rutas de Redes Profesionales ---
 Route::prefix('redes-profesionales')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/{id_portafolio}', [RedesProfesionalesController::class, 'index']);
-        Route::post('/', [RedesProfesionalesController::class, 'store']);
-        Route::get('/detalle/{id}', [RedesProfesionalesController::class, 'show']);
-        Route::put('/{id}', [RedesProfesionalesController::class, 'update']);
-        Route::delete('/{id}', [RedesProfesionalesController::class, 'destroy']);
+        Route::get('/{id_usuario}',  [RedesProfesionalesController::class, 'index']);
+        Route::post('/',             [RedesProfesionalesController::class, 'store']);
+        Route::put('/{id}',         [RedesProfesionalesController::class, 'update']);
+        Route::delete('/{id}',      [RedesProfesionalesController::class, 'destroy']);
     });
 });
 

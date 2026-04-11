@@ -71,6 +71,8 @@ Route::prefix('redes-profesionales')->group(function () {
 // --- Rutas de Proyecto ---
 Route::prefix('proyecto/gestion-proyectos')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
+        // Nuevo endpoint para el selector del Frontend
+        Route::get('/tecnologias/lista', [ProyectoController::class, 'listarTecnologias']);
         Route::get('/{id_portafolio}', [ProyectoController::class, 'index']);
         Route::post('/', [ProyectoController::class, 'store']);
         Route::put('/{id}', [ProyectoController::class, 'update']);

@@ -50,14 +50,12 @@ Route::prefix('usuario')->group(function () {
 
 
 // --- Rutas de Habilidad ---
-Route::prefix('habilidad')->group(function () {
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/{id_portafolio}', [HabilidadController::class, 'index']);
-        Route::post('/', [HabilidadController::class, 'store']);
-        Route::get('/{id}', [HabilidadController::class, 'show']);
-        Route::put('/{id}', [HabilidadController::class, 'update']);
-        Route::delete('/{id}', [HabilidadController::class, 'destroy']);
-    });
+Route::prefix('habilidad')->middleware('auth:sanctum')->group(function () {
+    Route::get('/',        [HabilidadController::class, 'index']);
+    Route::post('/',       [HabilidadController::class, 'store']);
+    Route::get('/{id}',    [HabilidadController::class, 'show']);
+    Route::put('/{id}',    [HabilidadController::class, 'update']);
+    Route::delete('/{id}', [HabilidadController::class, 'destroy']);
 });
 
 // --- Rutas de Redes Profesionales ---

@@ -3,17 +3,39 @@
 namespace App\Http\Controllers;
 
 use App\Models\Proyecto;
+use App\Models\Tecnologia;
 use App\Http\Requests\ProyectoStoreRequest; 
 use Illuminate\Http\Request;
 
 class ProyectoController extends Controller
 {
-    // Listar proyectos de un portafolio específico (Útil para la vista "Mis Proyectos")
-    public function index($id_portafolio)
+
+    public function listarTecnologias()
     {
-        $proyectos = Proyecto::with('tecnologias')
-            ->where('id_portafolio', $id_portafolio)
-            ->get();
+        // Trae todas las tecnologías (id, nombre, categoria)
+        $tecnologias = Tecnologia::all();
+        return response()->json($tecnologias, 200);
+    }
+    // Listar proyectos con opción de búsqueda integrada
+    public function index(Request $request, $id_portafolio)
+    {
+        // 1. Creamos la base de la consulta filtrando por el portafolio
+        $query = Proyecto::with('tecnologias')
+            ->where('id_portafolio', $id_portafolio);
+
+        // 2. Si el usuario escribió algo en el buscador (?buscar=...)
+        if ($request->has('buscar') && !empty($request->buscar)) {
+            $termino = $request->buscar;
+            
+            // Usamos una función anidada para que el "OR" no rompa el filtro del id_portafolio
+            $query->where(function($q) use ($termino) {
+                $q->where('nombre', 'LIKE', '%' . $termino . '%')
+                ->orWhere('descripcion', 'LIKE', '%' . $termino . '%');
+            });
+        }
+
+        // 3. Obtenemos los resultados finalizados
+        $proyectos = $query->get();
 
         return response()->json($proyectos, 200);
     }

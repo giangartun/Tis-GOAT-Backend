@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 
 class UsuarioController extends Controller
 {
@@ -49,7 +50,17 @@ class UsuarioController extends Controller
 
         Cache::put('token_' . $token, $request->email, now()->addMinutes(5));
 
-        Mail::to($request->email)->send( new VerificacionEmail($token, $request->nombre) );
+        // En produccion esto suele, fallar, se espera e para servidores de la UNI ya fucnionen sin problemas
+        // Mail::to($request->email)->send( new VerificacionEmail($token, $request->nombre) );
+        
+        // Implementacion temporal usanod N8N para deployado en renderr (Validar si quitar luego de q deployemos en el servidor real)
+        Http::timeout(5)
+            ->when(app()->environment('local'), fn($http) => $http->withoutVerifying())
+            ->post("https://training.intersim.cloud/webhook/bdc3192b-756f-492c-b677-9cf13897e1b9", [
+                'email'  => $request->email,
+                'nombre' => $request->nombre,
+                'token'  => $token,
+            ]);
 
         return response()->json([
             'message' => 'Revisa tu correo para completar el registro. El enlace expira en 5 minutos.'

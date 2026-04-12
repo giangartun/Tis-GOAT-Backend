@@ -49,9 +49,15 @@ class UsuarioController extends Controller
 
         Cache::put('token_' . $token, $request->email, now()->addMinutes(5));
 
-        Mail::to($request->email)->queue(
-            new VerificacionEmail($token, $request->nombre)
-        );
+        dispatch(function () use ($request, $token) {
+            try {
+                Mail::to($request->email)->send(
+                    new VerificacionEmail($token, $request->nombre)
+                );
+            } catch (\Exception $e) {
+                \Log::error('Error enviando correo: ' . $e->getMessage());
+            }
+        });
 
         return response()->json([
             'message' => 'Revisa tu correo para completar el registro. El enlace expira en 5 minutos.'

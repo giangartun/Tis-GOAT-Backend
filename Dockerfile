@@ -13,15 +13,18 @@ COPY . .
 
 RUN composer install --no-dev --optimize-autoloader
 
-# Laravel optimización
-RUN php artisan config:clear \
- && php artisan config:cache \
- && php artisan route:cache \
- && php artisan view:cache
+# 🔥 PERMISOS (CRÍTICO)
+RUN chmod -R 775 storage bootstrap/cache
 
 # Copiar config de nginx
 COPY nginx.conf /etc/nginx/sites-available/default
 
 EXPOSE 10000
 
-CMD service nginx start && php-fpm
+# 🔥 TODO en runtime (no en build)
+CMD php artisan config:clear && \
+    php artisan cache:clear && \
+    php artisan route:clear && \
+    php artisan view:clear && \
+    php artisan config:cache && \
+    service nginx start && php-fpm

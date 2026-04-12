@@ -28,4 +28,5 @@ CMD php artisan config:clear && \
     php artisan route:clear && \
     php artisan view:clear && \
     php artisan config:cache && \
-    service nginx start && php-fpm
+    service nginx start && \
+    php-fpm & php artisan queue:work --tries=3 --timeout=90

@@ -49,7 +49,7 @@ class UsuarioController extends Controller
 
         Cache::put('token_' . $token, $request->email, now()->addMinutes(5));
 
-        Mail::to($request->email)->send(
+        Mail::to($request->email)->queue(
             new VerificacionEmail($token, $request->nombre)
         );
 
@@ -59,35 +59,6 @@ class UsuarioController extends Controller
     }
 
     // Valida el token del correo y recién crea el usuario en BD
-    /*
-    public function verificarEmail(string $token)
-    {
-        $email = Cache::get('token_' . $token);
-
-        if (!$email) {
-            return response()->json(['message' => 'Token inválido o expirado.'], 400);
-        }
-
-        $datos = Cache::get('registro_' . $email);
-
-        if (!$datos) {
-            return response()->json(['message' => 'Token inválido o expirado.'], 400);
-        }
-
-        if ($datos['token'] !== $token) {
-            return response()->json(['message' => 'Token inválido.'], 400);
-        }
-
-        unset($datos['token']);
-        $datos['fecha'] = now();
-        Usuario::create($datos);
-
-        Cache::forget('registro_' . $email);
-        Cache::forget('token_' . $token);
-
-        return response()->json(['message' => 'Email verificado. Ya puedes iniciar sesión.'], 201);
-    }
-    */
     public function verificarEmail(string $token)
     {
         $email = Cache::get('token_' . $token);

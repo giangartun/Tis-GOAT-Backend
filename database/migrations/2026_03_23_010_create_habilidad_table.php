@@ -8,22 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-Schema::create('habilidad', function (Blueprint $table) {
+        Schema::create('habilidad', function (Blueprint $table) {
             $table->string('id_habilidad')->primary();
             
-            // 1. Añadimos el conector con el Portafolio
-            $table->string('id_portafolio'); 
+            $table->string('id_portafolio');
             
             $table->string('nombre');
-            $table->string('tipo'); // Aquí guardarás "Dura" o "Blanda"
-            $table->integer('nivel');
+            $table->string('tipo');       // "tecnica" | "blanda"
+            $table->string('categoria');  // "Lenguajes de programación", "Frameworks y Librerías", etc.
+            $table->integer('nivel');     // 0 al 100
             $table->boolean('visible')->default(true);
 
-            // 2. Definimos la relación oficial
             $table->foreign('id_portafolio')
-            ->references('id_portafolio')
-            ->on('portafolio')
-            ->onDelete('cascade'); // Si borras el portafolio, se borran sus habilidades
+                ->references('id_portafolio')
+                ->on('portafolio')
+                ->onDelete('cascade');
         });
     }
 

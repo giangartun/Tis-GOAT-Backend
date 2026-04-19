@@ -21,7 +21,7 @@ class RedesProfesionalesController extends Controller
     {
         $request->validate([
             'id_usuario'  => 'required|string|exists:usuario,id_usuario',
-            'nombre_red'  => 'required|string|max:100|in:linkedin,github,twitter,behance,otro',
+            'nombre_red'  => 'required|string|max:100|in:linkedin,github,gitlab,leetcode,hackerrank,kaggle,instagram,facebook,twitter',
             'url_red'     => 'required|url|max:500',
         ]);
 

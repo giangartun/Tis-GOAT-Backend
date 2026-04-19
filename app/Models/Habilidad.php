@@ -20,6 +20,7 @@ class Habilidad extends Model
         'id_habilidad',
         'nombre',
         'tipo',
+        'categoria',
         'nivel',
         'visible',
         'id_portafolio' // 👈 FALTABA ESTO

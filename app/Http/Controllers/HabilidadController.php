@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class HabilidadController extends Controller
 {
-    // Obtener habilidades del portafolio asociado al token
+    // Obtener habilidades agrupadas por tipo y categoria
     public function index(Request $request)
     {
         $usuario = $request->user();
@@ -25,8 +25,9 @@ class HabilidadController extends Controller
 
         $habilidades = Habilidad::where('id_portafolio', $portafolio->id_portafolio)
             ->orderBy('tipo')
+            ->orderBy('categoria')
             ->get()
-            ->groupBy('tipo');
+            ->groupBy(['tipo', 'categoria']);
 
         return response()->json($habilidades);
     }
@@ -57,7 +58,7 @@ class HabilidadController extends Controller
         return response()->json($habilidad);
     }
 
-    // Crear habilidad usando el portafolio del token
+    // Crear habilidad
     public function store(Request $request)
     {
         $usuario = $request->user();
@@ -71,16 +72,18 @@ class HabilidadController extends Controller
         }
 
         $request->validate([
-            'nombre'  => 'required|string|max:100',
-            'tipo'    => 'required|string|in:tecnica,blanda',
-            'nivel'   => 'required|integer|min:0|max:100',
-            'visible' => 'boolean'
+            'nombre'    => 'required|string|max:100',
+            'tipo'      => 'required|string|in:tecnica,blanda',
+            'categoria' => 'required|string|max:100',
+            'nivel'     => 'required|integer|min:0|max:100',
+            'visible'   => 'boolean'
         ]);
 
         $habilidad = Habilidad::create([
             'id_habilidad'  => (string) Str::ulid(),
             'nombre'        => $request->nombre,
             'tipo'          => $request->tipo,
+            'categoria'     => $request->categoria,
             'nivel'         => $request->nivel,
             'visible'       => $request->visible ?? true,
             'id_portafolio' => $portafolio->id_portafolio
@@ -92,7 +95,7 @@ class HabilidadController extends Controller
         ], 201);
     }
 
-    // Actualizar habilidad verificando que pertenece al portafolio del token
+    // Actualizar habilidad
     public function update(Request $request, $id)
     {
         $usuario = $request->user();
@@ -116,14 +119,15 @@ class HabilidadController extends Controller
         }
 
         $request->validate([
-            'nombre'  => 'sometimes|string|max:100',
-            'tipo'    => 'sometimes|string|in:tecnica,blanda',
-            'nivel'   => 'sometimes|integer|min:0|max:100',
-            'visible' => 'sometimes|boolean'
+            'nombre'    => 'sometimes|string|max:100',
+            'tipo'      => 'sometimes|string|in:tecnica,blanda',
+            'categoria' => 'sometimes|string|max:100',
+            'nivel'     => 'sometimes|integer|min:0|max:100',
+            'visible'   => 'sometimes|boolean'
         ]);
 
         $habilidad->update($request->only([
-            'nombre', 'tipo', 'nivel', 'visible'
+            'nombre', 'tipo', 'categoria', 'nivel', 'visible'
         ]));
 
         return response()->json([
@@ -132,7 +136,7 @@ class HabilidadController extends Controller
         ]);
     }
 
-    // Eliminar habilidad verificando que pertenece al portafolio del token
+    // Eliminar habilidad
     public function destroy(Request $request, $id)
     {
         $usuario = $request->user();

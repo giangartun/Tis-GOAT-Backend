@@ -79,5 +79,3 @@ Route::prefix('proyecto/gestion-proyectos')->group(function () {
         Route::delete('/{id}', [ProyectoController::class, 'destroy']);
     });
 });
-
-

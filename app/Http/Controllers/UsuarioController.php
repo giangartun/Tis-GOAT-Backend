@@ -165,6 +165,8 @@ class UsuarioController extends Controller
             'usuario' => [
                 'id_usuario' => $usuario->id_usuario,
                 'nombre'     => $usuario->nombre,
+                'apellido_paterno'  => $usuario->apellido_paterno,
+                'apellido_materno'  => $usuario->apellido_materno,
                 'email'      => $usuario->email,
             ],
             'id_portafolio' => $portafolio ? $portafolio->id_portafolio : null

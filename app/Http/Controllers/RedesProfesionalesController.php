@@ -55,7 +55,8 @@ class RedesProfesionalesController extends Controller
         $red = RedesProfesionales::findOrFail($id);
 
         $request->validate([
-            'nombre_red' => 'sometimes|string|in:linkedin,github,twitter,behance,otro',
+            // FIX: lista sincronizada con store() — antes tenía behance/otro que no existen en el frontend
+            'nombre_red' => 'sometimes|string|in:linkedin,github,gitlab,leetcode,hackerrank,kaggle,instagram,facebook,twitter',
             'url_red'    => 'sometimes|url|max:500',
         ]);
 

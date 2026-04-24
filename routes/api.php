@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\HabilidadController;
+use App\Http\Controllers\EvidenciaController;
 use App\Http\Controllers\RedesProfesionalesController;
 
 
@@ -77,5 +78,14 @@ Route::prefix('proyecto/gestion-proyectos')->group(function () {
         Route::post('/', [ProyectoController::class, 'store']);
         Route::put('/{id}', [ProyectoController::class, 'update']);
         Route::delete('/{id}', [ProyectoController::class, 'destroy']);
+    });
+});
+
+// --- Rutas de Evidencias ---
+Route::prefix('proyecto/evidencias')->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/subir', [EvidenciaController::class, 'subir']);
+        Route::get('/mostrar/{id}', [EvidenciaController::class, 'mostrar']);
+        Route::delete('/eliminar/{id}', [EvidenciaController::class, 'eliminar']);
     });
 });

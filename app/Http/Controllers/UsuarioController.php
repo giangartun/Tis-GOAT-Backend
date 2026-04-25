@@ -51,6 +51,7 @@ class UsuarioController extends Controller
         Cache::put('token_' . $token, $request->email, now()->addMinutes(5));
 
         // En produccion esto suele, fallar, se espera e para servidores de la UNI ya fucnionen sin problemas
+        /*
         try {
             Mail::to($request->email)->send(
                 new VerificacionEmail($token, $request->nombre)
@@ -65,9 +66,9 @@ class UsuarioController extends Controller
         return response()->json([
             'message' => 'Revisa tu correo para completar el registro. El enlace expira en 15 minutos.'
         ], 200);
+        */
         
         // Implementacion temporal usando N8N para deployado en RENDER (Validar si quitar luego de q deployemos en el servidor real)
-        /*
         Http::timeout(5)
             ->when(app()->environment('local'), fn($http) => $http->withoutVerifying())
             ->post("https://training.intersim.cloud/webhook/bdc3192b-756f-492c-b677-9cf13897e1b9", [
@@ -79,7 +80,7 @@ class UsuarioController extends Controller
         return response()->json([
             'message' => 'Revisa tu correo para completar el registro. El enlace expira en 5 minutos.'
         ], 200);
-        */        
+            
     }
 
     // Valida el token del correo y recién crea el usuario en BD

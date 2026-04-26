@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('id_plantilla')->nullable();
             
             $table->string('enlace_pagi_web')->unique();
+            $table->boolean('visible')->default(true);
             
             // Usamos timestamp para mayor precisión en Neon.tech
             $table->timestamp('creado_en')->nullable();

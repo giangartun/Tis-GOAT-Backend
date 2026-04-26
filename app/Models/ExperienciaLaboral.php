@@ -22,6 +22,7 @@ class ExperienciaLaboral extends Model
         'descripcion',
         'fecha_ini',
         'fecha_fin',
+        'visible',
         'id_portafolio'
     ];
 

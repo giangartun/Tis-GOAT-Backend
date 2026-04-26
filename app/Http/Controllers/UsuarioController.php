@@ -126,6 +126,7 @@ class UsuarioController extends Controller
                 'id_usuario' => $usuario->id_usuario,
                 'id_plantilla' => null,
                 'enlace_pagi_web' => $urlCompleta,
+                'visible' => true,
                 'creado_en' => now(),
                 'fecha_act' => now(),
             ]);

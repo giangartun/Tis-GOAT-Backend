@@ -5,6 +5,7 @@ use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\HabilidadController;
 use App\Http\Controllers\EvidenciaController;
+use App\Http\Controllers\PrivacidadPortafolioController;
 use App\Http\Controllers\RedesProfesionalesController;
 
 
@@ -87,5 +88,15 @@ Route::prefix('proyecto/evidencias')->group(function () {
         Route::post('/subir', [EvidenciaController::class, 'subir']);
         Route::get('/mostrar/{id}', [EvidenciaController::class, 'mostrar']);
         Route::delete('/eliminar/{id}', [EvidenciaController::class, 'eliminar']);
+    });
+});
+
+
+// --- Rutas de Privacidad Portafolios ---
+Route::prefix('privacidad')->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/', [PrivacidadPortafolioController::class, 'index']);
+        Route::post('/actualizar', [PrivacidadPortafolioController::class, 'actualizar']);
+        Route::post('/restablecer', [PrivacidadPortafolioController::class, 'restablecer']);
     });
 });

@@ -6,6 +6,7 @@ use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\HabilidadController;
 use App\Http\Controllers\EvidenciaController;
 use App\Http\Controllers\PrivacidadPortafolioController;
+use App\Http\Controllers\PortafolioController;
 use App\Http\Controllers\RedesProfesionalesController;
 
 
@@ -98,5 +99,12 @@ Route::prefix('privacidad')->group(function () {
         Route::get('/', [PrivacidadPortafolioController::class, 'index']);
         Route::post('/actualizar', [PrivacidadPortafolioController::class, 'actualizar']);
         Route::post('/restablecer', [PrivacidadPortafolioController::class, 'restablecer']);
+    });
+});
+
+// --- Rutas de Portafolios ---
+Route::prefix('portafolio')->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/obtener_url', [PortafolioController::class, 'obtenerUrl']);
     });
 });

@@ -111,15 +111,10 @@ class UsuarioController extends Controller
             $datos['fecha'] = now();
             $usuario = Usuario::create($datos);
 
-            //Generar slug limpio
-            $base = Str::slug($usuario->nombre . '-' . $usuario->apellido_paterno);
-
-            //Asegurar unicidad (usando parte del ULID)
-            $slug = $base . '-' . substr($usuario->id_usuario, 0, 6);
-
-            //Construir URL completa desde .env
-            $frontend = rtrim(env('FRONTEND_URL'), '/');
-            $urlCompleta = $frontend . '/' . $slug;
+            $codigo = substr($usuario->id_usuario, 0, 6);
+            $nombre = Str::slug($usuario->nombre . '-' . $usuario->apellido_paterno);
+            $frontend = rtrim(env('FRONTEND_URL'), '/'); 
+            $urlCompleta = $frontend . '/' . $codigo . '/' . $nombre;
 
             //Crear portafolio
             $portafolio = Portafolio::create([

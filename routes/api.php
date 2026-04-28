@@ -80,4 +80,13 @@ Route::prefix('proyecto/gestion-proyectos')->group(function () {
     });
 });
 
+// rutas públicas para portafolios (sin token)
+use App\Http\Controllers\PortafolioController;
+
+// Rutas públicas de portafolios (no requieren token)
+Route::prefix('portafolios')->group(function () {
+    Route::get('/publicos',  [PortafolioController::class, 'index']);
+    Route::get('/{id}',     [PortafolioController::class, 'show']);
+});
+
 

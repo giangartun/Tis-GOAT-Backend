@@ -17,6 +17,7 @@ class Portafolio extends Model
         'id_usuario',
         'id_plantilla',
         'enlace_pagi_web',
+        'visible',
         'creado_en',
         'fecha_act',
     ];

@@ -16,6 +16,7 @@ $table->string('id_proyecto')->primary();
             $table->text('descripcion')->nullable();
             $table->string('url_proyecto')->nullable(); // Link al repo o demo
             $table->string('imagen_url')->nullable();   // Miniatura del proyecto
+            $table->boolean('visible')->default(true);
             
             $table->date('fecha_ini')->nullable();
             $table->date('fecha_fin')->nullable();

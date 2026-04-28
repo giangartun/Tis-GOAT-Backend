@@ -21,6 +21,7 @@ class RedesProfesionales extends Model
         'nombre_red',
         'url_red',
         'id_usuario',
+        'visible'
     ];
 
     public function uniqueIds(): array

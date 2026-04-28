@@ -21,6 +21,7 @@ class Proyecto extends Model
         'descripcion',
         'url_proyecto',
         'imagen_url',
+        'visible',
         'fecha_ini',
         'fecha_fin',
         'creado_en',

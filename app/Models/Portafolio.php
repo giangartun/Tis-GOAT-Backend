@@ -10,6 +10,7 @@ class Portafolio extends Model
     protected $primaryKey = 'id_portafolio';
     public $incrementing = false;
     protected $keyType = 'string';
+    protected $table = 'portafolio'; // 👈 esto le dice a Laravel el nombre exacto
 
     protected $fillable = [
         'id_portafolio',

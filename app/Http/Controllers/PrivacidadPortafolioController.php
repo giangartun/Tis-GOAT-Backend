@@ -12,12 +12,17 @@ use App\Models\RedesProfesionales;
 
 class PrivacidadPortafolioController extends Controller
 {
-    private function buildSectionResponse($items, string $primaryKey): array
+    private function buildSectionResponse($items, string $primaryKey, string $labelKey): array
     {
-        $bloque = ['TODOS' => $items->contains('visible', true)];
+        $bloque = [
+            'TODOS' => $items->contains('visible', true)
+        ];
 
         foreach ($items as $item) {
-            $bloque[$item->$primaryKey] = (bool) $item->visible;
+            $bloque[$item->$primaryKey] = [
+                'nombre'  => $item->$labelKey,
+                'visible' => (bool) $item->visible
+            ];
         }
 
         return $bloque;
@@ -39,28 +44,28 @@ class PrivacidadPortafolioController extends Controller
         $usuario    = $request->user();
         $portafolio = Portafolio::where('id_usuario', $usuario->id_usuario)->firstOrFail();
 
-        $proyectos          = Proyecto::where('id_portafolio', $portafolio->id_portafolio)
-                                ->select('id_proyecto', 'nombre', 'visible')->get();
+        $proyectos = Proyecto::where('id_portafolio', $portafolio->id_portafolio)
+            ->select('id_proyecto', 'nombre', 'visible')->get();
 
-        $habilidades        = Habilidad::where('id_portafolio', $portafolio->id_portafolio)
-                                ->select('id_habilidad', 'nombre', 'visible')->get();
+        $habilidades = Habilidad::where('id_portafolio', $portafolio->id_portafolio)
+            ->select('id_habilidad', 'nombre', 'visible')->get();
 
-        $expAcademica       = ExperienciaAcademica::where('id_portafolio', $portafolio->id_portafolio)
-                                ->select('id_experiencia_academica', 'titulo', 'visible')->get();
+        $expAcademica = ExperienciaAcademica::where('id_portafolio', $portafolio->id_portafolio)
+            ->select('id_experiencia_academica', 'titulo', 'visible')->get();
 
-        $expLaboral         = ExperienciaLaboral::where('id_portafolio', $portafolio->id_portafolio)
-                                ->select('id_experiencia', 'cargo', 'visible')->get();
+        $expLaboral = ExperienciaLaboral::where('id_portafolio', $portafolio->id_portafolio)
+            ->select('id_experiencia', 'cargo', 'visible')->get();
 
         $redesProfesionales = RedesProfesionales::where('id_usuario', $usuario->id_usuario)
-                                ->select('id_redes_prof', 'nombre_red', 'visible')->get();
+            ->select('id_redes_prof', 'nombre_red', 'visible')->get();
 
         return response()->json([
-            'portafolio'            => (bool) $portafolio->visible,
-            'proyectos'             => $this->buildSectionResponse($proyectos,          'id_proyecto'),
-            'habilidades'           => $this->buildSectionResponse($habilidades,        'id_habilidad'),
-            'experiencia_academica' => $this->buildSectionResponse($expAcademica,       'id_experiencia_academica'),
-            'experiencia_laboral'   => $this->buildSectionResponse($expLaboral,         'id_experiencia'),
-            'redes_profesionales'   => $this->buildSectionResponse($redesProfesionales, 'id_redes_prof'),
+            'portafolio' => (bool) $portafolio->visible,
+            'proyectos' => $this->buildSectionResponse($proyectos, 'id_proyecto', 'nombre'),
+            'habilidades' => $this->buildSectionResponse($habilidades, 'id_habilidad', 'nombre'),
+            'experiencia_academica' => $this->buildSectionResponse($expAcademica, 'id_experiencia_academica', 'titulo'),
+            'experiencia_laboral' => $this->buildSectionResponse($expLaboral, 'id_experiencia', 'cargo'),
+            'redes_profesionales' => $this->buildSectionResponse($redesProfesionales, 'id_redes_prof', 'nombre_red'),
         ]);
     }
 

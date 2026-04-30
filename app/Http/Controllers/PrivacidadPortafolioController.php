@@ -12,102 +12,109 @@ use App\Models\RedesProfesionales;
 
 class PrivacidadPortafolioController extends Controller
 {
+    private function buildSectionResponse($items, string $primaryKey): array
+    {
+        $bloque = ['TODOS' => $items->contains('visible', true)];
+
+        foreach ($items as $item) {
+            $bloque[$item->$primaryKey] = (bool) $item->visible;
+        }
+
+        return $bloque;
+    }
+
+    private function updateSection($query, string $primaryKey, array $seccion): void
+    {
+        if (empty($seccion)) return;
+
+        foreach ($seccion as $id => $valor) {
+            (clone $query)
+                ->where($primaryKey, $id)
+                ->update(['visible' => (bool) $valor]);
+        }
+    }
 
     public function index(Request $request)
     {
-        $usuario   = $request->user();
+        $usuario    = $request->user();
         $portafolio = Portafolio::where('id_usuario', $usuario->id_usuario)->firstOrFail();
 
+        $proyectos          = Proyecto::where('id_portafolio', $portafolio->id_portafolio)
+                                ->select('id_proyecto', 'nombre', 'visible')->get();
+
+        $habilidades        = Habilidad::where('id_portafolio', $portafolio->id_portafolio)
+                                ->select('id_habilidad', 'nombre', 'visible')->get();
+
+        $expAcademica       = ExperienciaAcademica::where('id_portafolio', $portafolio->id_portafolio)
+                                ->select('id_experiencia_academica', 'titulo', 'visible')->get();
+
+        $expLaboral         = ExperienciaLaboral::where('id_portafolio', $portafolio->id_portafolio)
+                                ->select('id_experiencia', 'cargo', 'visible')->get();
+
+        $redesProfesionales = RedesProfesionales::where('id_usuario', $usuario->id_usuario)
+                                ->select('id_redes_prof', 'nombre_red', 'visible')->get();
+
         return response()->json([
-            'portafolio'            => $portafolio->visible,
-            'proyectos'             => !Proyecto::where('id_portafolio', $portafolio->id_portafolio)
-                                            ->where('visible', false)->exists()
-                                        ? true
-                                        : Proyecto::where('id_portafolio', $portafolio->id_portafolio)
-                                            ->select('id_proyecto', 'nombre', 'visible')->get(),
-            'habilidades'           => !Habilidad::where('id_portafolio', $portafolio->id_portafolio)
-                                            ->where('visible', false)->exists()
-                                        ? true
-                                        : Habilidad::where('id_portafolio', $portafolio->id_portafolio)
-                                            ->select('id_habilidad', 'nombre', 'visible')->get(),
-            'experiencia_academica' => !ExperienciaAcademica::where('id_portafolio', $portafolio->id_portafolio)
-                                            ->where('visible', false)->exists()
-                                        ? true
-                                        : ExperienciaAcademica::where('id_portafolio', $portafolio->id_portafolio)
-                                            ->select('id_experiencia_academica', 'titulo', 'visible')->get(),
-            'experiencia_laboral'   => !ExperienciaLaboral::where('id_portafolio', $portafolio->id_portafolio)
-                                            ->where('visible', false)->exists()
-                                        ? true
-                                        : ExperienciaLaboral::where('id_portafolio', $portafolio->id_portafolio)
-                                            ->select('id_experiencia', 'cargo', 'visible')->get(),
-            'redes_profesionales'   => !RedesProfesionales::where('id_usuario', $usuario->id_usuario)
-                                            ->where('visible', false)->exists()
-                                        ? true
-                                        : RedesProfesionales::where('id_usuario', $usuario->id_usuario)
-                                            ->select('id_redes_prof', 'nombre_red', 'visible')->get(),
+            'portafolio'            => (bool) $portafolio->visible,
+            'proyectos'             => $this->buildSectionResponse($proyectos,          'id_proyecto'),
+            'habilidades'           => $this->buildSectionResponse($habilidades,        'id_habilidad'),
+            'experiencia_academica' => $this->buildSectionResponse($expAcademica,       'id_experiencia_academica'),
+            'experiencia_laboral'   => $this->buildSectionResponse($expLaboral,         'id_experiencia'),
+            'redes_profesionales'   => $this->buildSectionResponse($redesProfesionales, 'id_redes_prof'),
         ]);
     }
 
-    /**
-     * POST /api/privacidad
-     * Actualiza la visibilidad de todas las secciones
-     *
-     * Body esperado:
-     * {
-     *   "portafolio": true,
-     *   "proyectos": false,
-     *   "habilidades": true,
-     *   "experiencia_academica": false,
-     *   "experiencia_laboral": true,
-     *   "redes_profesionales": false
-     * }
-     */
     public function actualizar(Request $request)
     {
         $request->validate([
             'portafolio'            => 'required|boolean',
-            'proyectos'             => 'required|boolean',
-            'habilidades'           => 'required|boolean',
-            'experiencia_academica' => 'required|boolean',
-            'experiencia_laboral'   => 'required|boolean',
-            'redes_profesionales'   => 'required|boolean',
+            'proyectos'             => 'sometimes|array',
+            'habilidades'           => 'sometimes|array',
+            'experiencia_academica' => 'sometimes|array',
+            'experiencia_laboral'   => 'sometimes|array',
+            'redes_profesionales'   => 'sometimes|array',
         ]);
 
         $usuario    = $request->user();
         $portafolio = Portafolio::where('id_usuario', $usuario->id_usuario)->firstOrFail();
 
-        // Portafolio
         $portafolio->update(['visible' => $request->portafolio]);
 
-        // Proyectos
-        Proyecto::where('id_portafolio', $portafolio->id_portafolio)
-            ->update(['visible' => $request->proyectos]);
+        $this->updateSection(
+            Proyecto::where('id_portafolio', $portafolio->id_portafolio),
+            'id_proyecto',
+            $request->proyectos
+        );
 
-        // Habilidades
-        Habilidad::where('id_portafolio', $portafolio->id_portafolio)
-            ->update(['visible' => $request->habilidades]);
+        $this->updateSection(
+            Habilidad::where('id_portafolio', $portafolio->id_portafolio),
+            'id_habilidad',
+            $request->habilidades
+        );
 
-        // Experiencia Académica
-        ExperienciaAcademica::where('id_portafolio', $portafolio->id_portafolio)
-            ->update(['visible' => $request->experiencia_academica]);
+        $this->updateSection(
+            ExperienciaAcademica::where('id_portafolio', $portafolio->id_portafolio),
+            'id_experiencia_academica',
+            $request->experiencia_academica
+        );
 
-        // Experiencia Laboral
-        ExperienciaLaboral::where('id_portafolio', $portafolio->id_portafolio)
-            ->update(['visible' => $request->experiencia_laboral]);
+        $this->updateSection(
+            ExperienciaLaboral::where('id_portafolio', $portafolio->id_portafolio),
+            'id_experiencia',
+            $request->experiencia_laboral
+        );
 
-        // Redes Profesionales (usa id_usuario directamente)
-        RedesProfesionales::where('id_usuario', $usuario->id_usuario)
-            ->update(['visible' => $request->redes_profesionales]);
+        $this->updateSection(
+            RedesProfesionales::where('id_usuario', $usuario->id_usuario),
+            'id_redes_prof',
+            $request->redes_profesionales
+        );
 
         return response()->json([
             'message' => 'Configuración de privacidad actualizada correctamente.'
         ], 200);
     }
 
-    /**
-     * POST /api/privacidad/restablecer
-     * Restablece toda la visibilidad a true
-     */
     public function restablecer(Request $request)
     {
         $usuario    = $request->user();
@@ -115,20 +122,11 @@ class PrivacidadPortafolioController extends Controller
 
         $portafolio->update(['visible' => true]);
 
-        Proyecto::where('id_portafolio', $portafolio->id_portafolio)
-            ->update(['visible' => true]);
-
-        Habilidad::where('id_portafolio', $portafolio->id_portafolio)
-            ->update(['visible' => true]);
-
-        ExperienciaAcademica::where('id_portafolio', $portafolio->id_portafolio)
-            ->update(['visible' => true]);
-
-        ExperienciaLaboral::where('id_portafolio', $portafolio->id_portafolio)
-            ->update(['visible' => true]);
-
-        RedesProfesionales::where('id_usuario', $usuario->id_usuario)
-            ->update(['visible' => true]);
+        Proyecto::where('id_portafolio', $portafolio->id_portafolio)->update(['visible' => true]);
+        Habilidad::where('id_portafolio', $portafolio->id_portafolio)->update(['visible' => true]);
+        ExperienciaAcademica::where('id_portafolio', $portafolio->id_portafolio)->update(['visible' => true]);
+        ExperienciaLaboral::where('id_portafolio', $portafolio->id_portafolio)->update(['visible' => true]);
+        RedesProfesionales::where('id_usuario', $usuario->id_usuario)->update(['visible' => true]);
 
         return response()->json([
             'message' => 'Privacidad restablecida. Todo es visible nuevamente.'

@@ -106,5 +106,6 @@ Route::prefix('privacidad')->group(function () {
 Route::prefix('portafolio')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/obtener_url', [PortafolioController::class, 'obtenerUrl']);
+        Route::get('/completo', [PortafolioController::class, 'obtenerCompleto']);
     });
 });

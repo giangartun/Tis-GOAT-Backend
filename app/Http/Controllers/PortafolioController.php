@@ -2,52 +2,50 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Portafolio;
-use App\Models\Habilidad;
-use Illuminate\Http\Request;
 use App\Models\Usuario;
+use Illuminate\Http\Request;
 
 class PortafolioController extends Controller
 {
-    // Lista pública de portafolios (sin token)
+    // Lista pública de portafolios
     public function index()
     {
-        $portafolios = Portafolio::with(['usuario', 'habilidades' => function ($query) {
+        $portafolios = Portafolio::with([
+            'usuario',
+            'habilidades' => function ($query) {
                 $query->where('visible', true)
                     ->where('tipo', 'tecnica')
-                      ->limit(3); // solo muestra 3 etiquetas como en el mockup
-            }])
-            ->get()
-            ->map(function ($portafolio) {
-                return [
-                    'id_portafolio' => $portafolio->id_portafolio,
-                    'enlace_pagi_web' => $portafolio->enlace_pagi_web,
-                    'usuario' => [
-                        'nombre'          => $portafolio->usuario->nombre . ' ' . 
-                                            $portafolio->usuario->apellido_paterno,
-                        'profesion'       => $portafolio->usuario->biografia,
-                        'foto'            => $portafolio->usuario->foto,
-                        'ubicacion'       => null, // si no tienes ese campo aún
-                    ],
-                    'habilidades' => $portafolio->habilidades->map(fn($h) => [
-                        'nombre' => $h->nombre
-                    ])
-                ];
-            });
+                    ->limit(3);
+            }
+        ])->get()->map(function ($portafolio) {
+            return [
+                'id_portafolio' => $portafolio->id_portafolio,
+                'enlace_pagi_web' => $portafolio->enlace_pagi_web,
+                'usuario' => [
+                    'nombre' => trim(($portafolio->usuario->nombre ?? '') . ' ' . ($portafolio->usuario->apellido_paterno ?? '')),
+                    'profesion' => $portafolio->usuario->biografia ?? null,
+                    'foto' => $portafolio->usuario->foto ?? null,
+                    'ubicacion' => null,
+                ],
+                'habilidades' => $portafolio->habilidades->map(fn($h) => [
+                    'nombre' => $h->nombre,
+                ])->values(),
+            ];
+        });
 
         return response()->json($portafolios);
     }
 
-    // Ver perfil público de un portafolio específico
     public function show($id_portafolio)
     {
         $portafolio = Portafolio::with([
             'usuario',
-            'habilidades'         => fn($q) => $q->where('visible', true),
+            'plantilla',
+            'habilidades' => fn($q) => $q->where('visible', true),
             'experienciasLaborales',
             'experienciasAcademicas',
-            'proyectos'           => fn($q) => $q->where('visible', true) ?? $q,
+            'proyectos' => fn($q) => $q->where('visible', true),
         ])->where('id_portafolio', $id_portafolio)->first();
 
         if (!$portafolio) {
@@ -57,12 +55,15 @@ class PortafolioController extends Controller
         return response()->json($portafolio);
     }
 
-    /**
-     * Devuelve toda la información del portafolio del usuario autenticado
-     */
     public function obtenerCompleto(Request $request)
     {
-        $usuario = Usuario::with([
+        $usuario = auth()->user();
+
+        if (!$usuario) {
+            return response()->json(['message' => 'No autenticado'], 401);
+        }
+
+        $usuario->load([
             'portafolio.plantilla',
             'portafolio.proyectos.tecnologias',
             'portafolio.proyectos.evidencias',
@@ -70,9 +71,7 @@ class PortafolioController extends Controller
             'portafolio.experienciasLaborales',
             'portafolio.experienciasAcademicas',
             'redesProfesionales',
-        ])
-        ->where('id_usuario', $request->user()->id_usuario)
-        ->firstOrFail();
+        ]);
 
         $portafolio = $usuario->portafolio;
 
@@ -94,8 +93,15 @@ class PortafolioController extends Controller
                 'visible' => $portafolio->visible,
                 'creado_en' => $portafolio->creado_en,
                 'fecha_act' => $portafolio->fecha_act,
+                'plantilla' => $portafolio->plantilla ? [
+                    'id_plantilla' => $portafolio->plantilla->id_plantilla,
+                    'nombre' => $portafolio->plantilla->nombre ?? null,
+                    'descripcion' => $portafolio->plantilla->descripcion ?? null,
+                    'imagen_preview' => $portafolio->plantilla->imagen_preview ?? null,
+                ] : null,
             ] : null,
-            'redes_profesionales' => $usuario->redesProfesionales->map(function ($red) {
+
+            'redes_profesionales' => ($usuario->redesProfesionales ?? collect())->map(function ($red) {
                 return [
                     'id_redes_prof' => $red->id_redes_prof,
                     'nombre_red' => $red->nombre_red,
@@ -103,6 +109,7 @@ class PortafolioController extends Controller
                     'visible' => $red->visible,
                 ];
             })->values(),
+
             'habilidades' => $portafolio
                 ? $portafolio->habilidades->map(function ($habilidad) {
                     return [
@@ -115,7 +122,8 @@ class PortafolioController extends Controller
                     ];
                 })->values()
                 : [],
-            'experiencia_laboral' => $portafolio
+
+            'experiencias_laborales' => $portafolio
                 ? $portafolio->experienciasLaborales->map(function ($exp) {
                     return [
                         'id_experiencia' => $exp->id_experiencia,
@@ -128,7 +136,8 @@ class PortafolioController extends Controller
                     ];
                 })->values()
                 : [],
-            'experiencia_academica' => $portafolio
+
+            'experiencias_academicas' => $portafolio
                 ? $portafolio->experienciasAcademicas->map(function ($exp) {
                     return [
                         'id_experiencia_academica' => $exp->id_experiencia_academica,
@@ -141,6 +150,7 @@ class PortafolioController extends Controller
                     ];
                 })->values()
                 : [],
+
             'proyectos' => $portafolio
                 ? $portafolio->proyectos->map(function ($proyecto) {
                     return [
@@ -172,11 +182,56 @@ class PortafolioController extends Controller
     }
 
     /**
-     * Si todavía quieres conservar el endpoint de solo URL
+     * Actualiza la plantilla seleccionada del portafolio del usuario autenticado
      */
+    public function actualizarPlantilla(Request $request)
+    {
+        $request->validate([
+            'id_plantilla' => 'required|exists:plantilla,id_plantilla',
+        ]);
+
+        $usuario = auth()->user();
+
+        if (!$usuario) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No autenticado.'
+            ], 401);
+        }
+
+        $portafolio = Portafolio::where('id_usuario', $usuario->id_usuario)->first();
+
+        if (!$portafolio) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se encontró un portafolio para este usuario.'
+            ], 404);
+        }
+
+        $portafolio->id_plantilla = $request->id_plantilla;
+        $portafolio->fecha_act = now();
+        $portafolio->save();
+
+        $portafolio->load('plantilla');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Plantilla actualizada correctamente.',
+            'data' => [
+                'id_portafolio' => $portafolio->id_portafolio,
+                'id_plantilla' => $portafolio->id_plantilla,
+                'fecha_act' => $portafolio->fecha_act,
+                'plantilla' => $portafolio->plantilla,
+            ]
+        ], 200);
+    }
+
     public function obtenerUrl(Request $request)
     {
-        $portafolio = \App\Models\Portafolio::where('id_usuario', $request->user()->id_usuario)->firstOrFail();
+        $portafolio = Portafolio::where(
+            'id_usuario',
+            auth()->user()->id_usuario
+        )->firstOrFail();
 
         return response()->json([
             'enlace_pagi_web' => $portafolio->enlace_pagi_web

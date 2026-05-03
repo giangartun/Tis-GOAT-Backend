@@ -10,7 +10,7 @@ class Portafolio extends Model
     protected $primaryKey = 'id_portafolio';
     public $incrementing = false;
     protected $keyType = 'string';
-    protected $table = 'portafolio'; // 👈 esto le dice a Laravel el nombre exacto
+    protected $table = 'portafolio';
 
     protected $fillable = [
         'id_portafolio',
@@ -25,6 +25,11 @@ class Portafolio extends Model
     public function usuario()
     {
         return $this->belongsTo(Usuario::class, 'id_usuario', 'id_usuario');
+    }
+
+    public function plantilla()
+    {
+        return $this->belongsTo(Plantilla::class, 'id_plantilla', 'id_plantilla');
     }
 
     public function habilidades()

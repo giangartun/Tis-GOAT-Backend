@@ -28,6 +28,10 @@ Route::prefix('usuario')->group(function () {
  * SE DEBE ANALIZAR CUAL REQUIERE SI UN TOKEN Y CUALES NO, ES MAS CONTROL INTERNO Y DE QUE ES LO QUE REALMENTE QUIERE SU FRONTEND
  */
 
+// --- Rutas de Plantillas ---
+// Catálogo público para que el usuario elija
+Route::get('plantillas/catalogo', [App\Http\Controllers\PlantillaController::class, 'index']);
+
 // --- Rutas de Habilidad ---
 Route::prefix('habilidad')->middleware('auth:sanctum')->group(function () {
     Route::get('/',        [HabilidadController::class, 'index']);
@@ -78,4 +82,6 @@ Route::prefix('privacidad')->middleware('auth:sanctum')->group(function () {
 Route::prefix('portafolio')->middleware('auth:sanctum')->group(function () {
     Route::get('/obtener_url', [PortafolioController::class, 'obtenerUrl']);
         Route::get('/completo', [PortafolioController::class, 'obtenerCompleto']);
+        // Nueva ruta para Seleccionar plantilla
+        Route::patch('/actualizar-plantilla', [PortafolioController::class, 'actualizarPlantilla']);
 });

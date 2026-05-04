@@ -16,7 +16,8 @@ class DatabaseSeeder extends Seeder
         
         $this -> call([
             GradoSeeder::class,
-            TecnologiaSeeder::class,  
+            TecnologiaSeeder::class,
+            PlantillaSeeder::class,  
         ]);
     }
 }

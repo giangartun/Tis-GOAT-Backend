@@ -20,7 +20,7 @@ class ProyectoController extends Controller
     public function index(Request $request, $id_portafolio)
     {
         // 1. Creamos la base de la consulta filtrando por el portafolio
-        $query = Proyecto::with('tecnologias')
+        $query = Proyecto::with(['tecnologias', 'evidencias'])
             ->where('id_portafolio', $id_portafolio);
 
         // 2. Si el usuario escribió algo en el buscador (?buscar=...)

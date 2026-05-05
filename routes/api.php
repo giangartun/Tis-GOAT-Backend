@@ -7,6 +7,7 @@ use App\Http\Controllers\EvidenciaController;
 use App\Http\Controllers\PrivacidadPortafolioController;
 use App\Http\Controllers\PortafolioController;
 use App\Http\Controllers\RedesProfesionalesController;
+use App\Http\Controllers\FotoPerfilController;
 
 // --- Rutas de Usuario ---
 Route::prefix('usuario')->group(function () {
@@ -84,4 +85,10 @@ Route::prefix('portafolio')->middleware('auth:sanctum')->group(function () {
         Route::get('/completo', [PortafolioController::class, 'obtenerCompleto']);
         // Nueva ruta para Seleccionar plantilla
         Route::patch('/actualizar-plantilla', [PortafolioController::class, 'actualizarPlantilla']);
+});
+
+// --- Rutas de Foto de Perfil ---
+Route::prefix('usuario/foto')->middleware('auth:sanctum')->group(function () {
+    Route::post('/',   [FotoPerfilController::class, 'subir']);
+    Route::delete('/', [FotoPerfilController::class, 'eliminar']);
 });

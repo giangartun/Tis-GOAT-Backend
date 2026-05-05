@@ -97,7 +97,7 @@ class PortafolioController extends Controller
                     'id_plantilla' => $portafolio->plantilla->id_plantilla,
                     'nombre' => $portafolio->plantilla->nombre ?? null,
                     'descripcion' => $portafolio->plantilla->descripcion ?? null,
-                    'imagen_preview' => $portafolio->plantilla->imagen_preview ?? null,
+                    'url_vista'    => $portafolio->plantilla->url_vista ?? null,
                 ] : null,
             ] : null,
 

@@ -44,7 +44,9 @@ class EvidenciaController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'archivo'     => 'required|file|max:20480|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,ppt,pptx,mp4,mp3,wav',
-            'id_proyecto' => 'required|exists:proyecto,id_proyecto',
+            'id_proyecto' => 'nullable|exists:proyecto,id_proyecto',
+            'id_academica' => 'nullable|exists:experiencia_academica,id_experiencia_academica',
+            'id_laboral'   => 'nullable|exists:experiencia_laboral,id_experiencia',
         ]);
 
         if ($validator->fails()) {
@@ -81,7 +83,9 @@ class EvidenciaController extends Controller
                 'foto_url'       => $tipo === 'imagen',
                 'tamano_bytes'   => $size,
                 'fecha_subida'   => now(),
-                'id_proyecto'    => $request->id_proyecto
+                'id_proyecto'    => $request->id_proyecto,
+                'id_experiencia_academica' => $request->id_academica,
+                'id_experiencia_laboral'   => $request->id_laboral,
             ]);
 
             return response()->json([

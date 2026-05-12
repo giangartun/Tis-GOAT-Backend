@@ -6,12 +6,14 @@ use Illuminate\Http\Request;
 use App\Models\Usuario;
 use App\Models\Portafolio;
 use App\Mail\VerificacionEmail;
+use App\Mail\RecuperarPasswordMail;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 
 class UsuarioController extends Controller
@@ -192,6 +194,93 @@ class UsuarioController extends Controller
 
         return response()->json([
             'message' => 'Sesión cerrada correctamente.'
+        ], 200);
+    }
+
+    // HU12: Generar token de recuperación y enviar email
+    public function enviarEnlaceReset(Request $request)
+    {
+        // 1. Valida que el email exista en la tabla 'usuario'
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:usuario,email'
+        ], [
+            'email.exists' => 'No encontramos ningún usuario con ese correo electrónico.'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        $email = $request->email;
+        $token = Str::random(64);
+
+        try {
+            // 2. Guardamos en la tabla migrada (password_reset_tokens)
+            // Si ya pidió uno antes, se actualiza el token y la fecha
+            DB::table('password_reset_tokens')->updateOrInsert(
+                ['email' => $email],
+                [
+                    'token' => $token,
+                    'created_at' => Carbon::now()
+                ]
+            );
+
+            // 3. Enviamos el correo (usando el SMTP)
+            Mail::to($email)->send(new RecuperarPasswordMail($token));
+
+            return response()->json([
+                'message' => 'Se ha enviado un enlace de recuperación a tu correo.'
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al procesar la solicitud.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // HU12 - Parte 2: Validar token y actualizar la contraseña
+    public function resetearContrasena(Request $request)
+    {
+        // 1. Validar los datos de entrada
+        $validator = Validator::make($request->all(), [
+            'token'      => 'required',
+            'email'      => 'required|email|exists:usuario,email',
+            'contrasena' => 'required|min:6|confirmed', // 'confirmed' busca 'contrasena_confirmation'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        // 2. Verificar si el token existe y es válido para ese email
+        $registro = DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->where('token', $request->token)
+            ->first();
+
+        if (!$registro) {
+            return response()->json(['message' => 'El token es inválido o el correo no coincide.'], 400);
+        }
+
+        // 3. (Opcional) Verificar si el token expiró (ejemplo: 60 minutos)
+        $expiracion = 60;
+        if (Carbon::parse($registro->created_at)->addMinutes($expiracion)->isPast()) {
+            DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+            return response()->json(['message' => 'El enlace ha expirado.'], 400);
+        }
+
+        // 4. Actualiza la contraseña en la tabla 'usuario'
+        $usuario = Usuario::where('email', $request->email)->first();
+        $usuario->contrasena = Hash::make($request->contrasena);
+        $usuario->save();
+
+        // 5. Borra el token para que no se pueda usar de nuevo
+        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+
+        return response()->json([
+            'message' => 'Tu contraseña ha sido actualizada con éxito.'
         ], 200);
     }
 }

@@ -15,6 +15,9 @@ Route::prefix('usuario')->group(function () {
     Route::post('/pre-registro', [UsuarioController::class, 'preRegistro']);
     Route::get('/verificar-email/{token}', [UsuarioController::class, 'verificarEmail']);
     Route::post('/login', [UsuarioController::class, 'login']);
+    Route::post('/contrasena/olvido', [UsuarioController::class, 'enviarEnlaceReset']);
+    Route::post('/contrasena/resetear', [UsuarioController::class, 'resetearContrasena']);
+
 
     // Endpoints para datos de usuario registrado (requiere token)
     Route::middleware('auth:sanctum')->group(function () {

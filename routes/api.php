@@ -8,6 +8,8 @@ use App\Http\Controllers\PrivacidadPortafolioController;
 use App\Http\Controllers\PortafolioController;
 use App\Http\Controllers\RedesProfesionalesController;
 use App\Http\Controllers\FotoPerfilController;
+use App\Http\Controllers\ExperienciaLaboralController;
+use App\Http\Controllers\ExperienciaAcademicaController;
 
 // --- Rutas de Usuario ---
 Route::prefix('usuario')->group(function () {
@@ -35,6 +37,28 @@ Route::prefix('usuario')->group(function () {
 // --- Rutas de Plantillas ---
 // Catálogo público para que el usuario elija
 Route::get('plantillas/catalogo', [App\Http\Controllers\PlantillaController::class, 'index']);
+
+// --- Rutas de Experiencia Laboral ---
+// El método index (listar) es público para que cualquiera vea el portafolio
+Route::get('experiencia-laboral/{id_portafolio}', [ExperienciaLaboralController::class, 'index']);
+
+// --- Rutas de Experiencia Académica ---
+// Endpoint público para renderizar el portafolio de estudios
+Route::get('experiencia-academica/{id_portafolio}', [ExperienciaAcademicaController::class, 'index']);
+
+// Rutas de Experiencia laboral (CRUD ); Los métodos de alteración de datos requieren Token de sesión para experiencia laboral
+Route::prefix('experiencia-laboral')->middleware('auth:sanctum')->group(function () {
+    Route::post('/',       [ExperienciaLaboralController::class, 'store']);
+    Route::put('/{id}',    [ExperienciaLaboralController::class, 'update']);
+    Route::delete('/{id}', [ExperienciaLaboralController::class, 'destroy']);
+});
+
+// Endpoints protegidos para gestionar el CRUD para experiencia académica (crear, actualizar, eliminar) requieren token de sesión
+Route::prefix('experiencia-academica')->middleware('auth:sanctum')->group(function () {
+    Route::post('/',       [ExperienciaAcademicaController::class, 'store']);
+    Route::put('/{id}',    [ExperienciaAcademicaController::class, 'update']);
+    Route::delete('/{id}', [ExperienciaAcademicaController::class, 'destroy']);
+});
 
 // --- Rutas de Habilidad ---
 Route::prefix('habilidad')->middleware('auth:sanctum')->group(function () {

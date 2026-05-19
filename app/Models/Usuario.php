@@ -18,6 +18,7 @@ class Usuario extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'tipo_usuario',
         'email', //esta asi en el modelo
         'contrasena',
         'nombre',

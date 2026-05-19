@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('usuario', function (Blueprint $table) {
             $table->string('id_usuario')->primary(); // ULID
+            $table->enum('tipo_usuario', ['admin', 'usuario']);
             $table->string('email')->unique();
             $table->string('contrasena');
             $table->string('nombre');

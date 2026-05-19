@@ -22,6 +22,7 @@ class UsuarioController extends Controller
     public function preRegistro(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'tipo_usuario' => 'required|in:admin,usuario',
             'email'            => 'required|email|unique:usuario,email',
             'contrasena'       => 'required|min:6|confirmed',
             'nombre'           => 'required|string|max:100',
@@ -41,6 +42,7 @@ class UsuarioController extends Controller
 
         Cache::put('registro_' . $request->email, [
             'token'            => $token,
+            'tipo_usuario'     => $request->tipo_usuario,
             'email'            => $request->email,
             'contrasena'       => Hash::make($request->contrasena),
             'nombre'           => $request->nombre,

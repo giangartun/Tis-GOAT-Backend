@@ -19,13 +19,14 @@ class Usuario extends Model
 
     protected $fillable = [
         'tipo_usuario',
-        'email', //esta asi en el modelo
+        'email', 
         'contrasena',
         'nombre',
         'apellido_paterno',
         'apellido_materno',
         'biografia',
-        'foto', // igual asi en el modelo
+        'estado_cuenta',
+        'foto', 
         'fecha'
     ];
 

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('apellido_paterno');
             $table->string('apellido_materno');
             $table->text('biografia')->nullable();
+            $table->enum('estado_cuenta', ['activo', 'suspendido']);
             $table->string('foto')->nullable();
             $table->timestamp('fecha')->nullable(); // Fecha y hora de creación automática
         });

@@ -10,6 +10,7 @@ use App\Http\Controllers\RedesProfesionalesController;
 use App\Http\Controllers\FotoPerfilController;
 use App\Http\Controllers\ExperienciaLaboralController;
 use App\Http\Controllers\ExperienciaAcademicaController;
+use App\Http\Controllers\AdministradorController;
 
 // --- Rutas de Usuario ---
 Route::prefix('usuario')->group(function () {
@@ -118,4 +119,9 @@ Route::prefix('portafolio')->middleware('auth:sanctum')->group(function () {
 Route::prefix('usuario/foto')->middleware('auth:sanctum')->group(function () {
     Route::post('/',   [FotoPerfilController::class, 'subir']);
     Route::delete('/', [FotoPerfilController::class, 'eliminar']);
+});
+
+// --- Rutas de Administrador ---
+Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
+    Route::get('/usuarios', [AdministradorController::class, 'index']);
 });

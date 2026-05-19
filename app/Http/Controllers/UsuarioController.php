@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Usuario;
+use App\Helpers\RegistroActividadHelper;
 use App\Models\Portafolio;
 use App\Mail\VerificacionEmail;
 use App\Mail\RecuperarPasswordMail;
@@ -114,6 +115,8 @@ class UsuarioController extends Controller
             //Crear usuario
             $datos['fecha'] = now();
             $usuario = Usuario::create($datos);
+            
+            RegistroActividadHelper::registrar($usuario->id_usuario, 'cuenta_creada');
 
             $codigo = substr($usuario->id_usuario, 0, 6);
             $nombre = Str::slug($usuario->nombre . '-' . $usuario->apellido_paterno);
@@ -173,6 +176,11 @@ class UsuarioController extends Controller
 
         $usuario->tokens()->delete();
 
+        $usuario->fecha_ult_acceso = now(); 
+        $usuario->save();         
+        
+        RegistroActividadHelper::registrar($usuario->id_usuario, 'inicio_sesion');
+
         $token = $usuario->createToken('sesion', ['*'], now()->addDays(7))->plainTextToken;
 
         return response()->json([
@@ -184,6 +192,8 @@ class UsuarioController extends Controller
                 'apellido_paterno'  => $usuario->apellido_paterno,
                 'apellido_materno'  => $usuario->apellido_materno,
                 'email'      => $usuario->email,
+                'estado_cuenta' => $usuario->estado_cuenta,
+                'tipo_usuario' => $usuario->tipo_usuario,
             ],
             'id_portafolio' => $portafolio ? $portafolio->id_portafolio : null
         ], 200);
@@ -193,6 +203,8 @@ class UsuarioController extends Controller
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
+
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'cierre_sesion');
 
         return response()->json([
             'message' => 'Sesión cerrada correctamente.'

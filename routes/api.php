@@ -124,4 +124,7 @@ Route::prefix('usuario/foto')->middleware('auth:sanctum')->group(function () {
 // --- Rutas de Administrador ---
 Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
     Route::get('/usuarios', [AdministradorController::class, 'index']);
+    Route::post('/usuarios/{id}/suspender', [AdministradorController::class, 'suspender']);
+    Route::post('/usuarios/{id}/reactivar', [AdministradorController::class, 'reactivar']);
+    Route::get('/bitacora', [AdministradorController::class, 'bitacora']);
 });

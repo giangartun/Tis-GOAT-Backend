@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\RegistroActividadHelper;
 use Illuminate\Http\Request;
 use App\Models\RedesProfesionales;
 use Illuminate\Support\Str;
@@ -43,6 +44,8 @@ class RedesProfesionalesController extends Controller
             'url_red'       => $request->url_red,
         ]);
 
+        RegistroActividadHelper::registrar($request->id_usuario, 'modificacion_redes_sociales');
+
         return response()->json([
             'message' => 'Red profesional agregada',
             'red'     => $red
@@ -62,6 +65,8 @@ class RedesProfesionalesController extends Controller
 
         $red->update($request->only(['nombre_red', 'url_red']));
 
+        RegistroActividadHelper::registrar($red->id_usuario, 'modificacion_redes_sociales');
+
         return response()->json([
             'message' => 'Red profesional actualizada',
             'red'     => $red
@@ -72,6 +77,9 @@ class RedesProfesionalesController extends Controller
     public function destroy($id)
     {
         $red = RedesProfesionales::where('id_redes_prof', $id)->firstOrFail();
+
+        RegistroActividadHelper::registrar($red->id_usuario, 'modificacion_redes_sociales');
+
         $red->delete();
 
         return response()->json([

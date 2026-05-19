@@ -9,7 +9,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class Usuario extends Model
 {
-     use HasFactory, HasUlids, HasApiTokens;
+    use HasFactory, HasUlids, HasApiTokens;
 
     protected $table = 'usuario';
     protected $primaryKey = 'id_usuario';
@@ -18,14 +18,17 @@ class Usuario extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'email', //esta asi en el modelo
+        'tipo_usuario',
+        'email',
         'contrasena',
         'nombre',
         'apellido_paterno',
         'apellido_materno',
         'biografia',
-        'foto', // igual asi en el modelo
-        'fecha'
+        'estado_cuenta',
+        'foto',
+        'fecha',
+        'fecha_ult_acceso', 
     ];
 
     protected $hidden = [
@@ -33,7 +36,8 @@ class Usuario extends Model
     ];
 
     protected $casts = [
-        'fecha' => 'datetime',
+        'fecha'         => 'datetime',
+        'fecha_ult_acceso' => 'datetime', 
     ];
 
     public function uniqueIds(): array
@@ -41,7 +45,6 @@ class Usuario extends Model
         return ['id_usuario'];
     }
 
-    // Relaciones basadas en el modelo ER
     public function registrosActividad()
     {
         return $this->hasMany(RegistroActividad::class, 'id_usuario');

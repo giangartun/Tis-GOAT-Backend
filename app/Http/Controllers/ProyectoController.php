@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\RegistroActividadHelper;
 use App\Models\Proyecto;
 use App\Models\Tecnologia;
 use App\Http\Requests\ProyectoStoreRequest; 
@@ -49,6 +50,8 @@ class ProyectoController extends Controller
 
     $proyecto = Proyecto::create($datos);
 
+    RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_proyectos');
+
     if ($request->has('tecnologias') && !empty($request->tecnologias)) {
         // Preparamos los datos para la tabla intermedia con sus propios IDs
         $tecnologiasConId = [];
@@ -75,6 +78,8 @@ class ProyectoController extends Controller
         
         $proyecto->update($request->validated());
 
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_proyectos');
+
         if ($request->has('tecnologias')) {
     $tecnologiasConId = [];
     foreach ($request->tecnologias as $tecId) {
@@ -96,6 +101,9 @@ class ProyectoController extends Controller
     public function destroy($id)
     {
         $proyecto = Proyecto::findOrFail($id);
+
+        RegistroActividadHelper::registrar($proyecto->portafolio->id_usuario, 'modificacion_proyectos');
+
         $proyecto->delete();
 
         return response()->json([

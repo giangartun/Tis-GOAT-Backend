@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\RegistroActividadHelper;
 use Illuminate\Http\Request;
 use App\Models\Evidencia;
 use Illuminate\Support\Facades\Validator;
@@ -88,6 +89,8 @@ class EvidenciaController extends Controller
                 'id_experiencia_laboral'   => $request->id_laboral,
             ]);
 
+            RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_evidencias');
+
             return response()->json([
                 'message'   => 'Archivo subido correctamente',
                 'evidencia' => [
@@ -157,6 +160,8 @@ class EvidenciaController extends Controller
             Cloudinary::uploadApi()->destroy($publicId, [
                 'resource_type' => $resourceType
             ]);
+
+            RegistroActividadHelper::registrar($evidencia->proyecto->portafolio->id_usuario,'modificacion_evidencias');
 
             $evidencia->delete();
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\RegistroActividadHelper;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Habilidad;
@@ -89,6 +90,8 @@ class HabilidadController extends Controller
             'id_portafolio' => $portafolio->id_portafolio
         ]);
 
+        RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_habilidades');
+
         return response()->json([
             'message'   => 'Habilidad creada',
             'habilidad' => $habilidad
@@ -130,6 +133,8 @@ class HabilidadController extends Controller
             'nombre', 'tipo', 'categoria', 'nivel', 'visible'
         ]));
 
+        RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_habilidades');
+
         return response()->json([
             'message'   => 'Habilidad actualizada',
             'habilidad' => $habilidad
@@ -158,6 +163,8 @@ class HabilidadController extends Controller
                 'message' => 'Habilidad no encontrada o no te pertenece'
             ], 404);
         }
+
+        RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_habilidades');
 
         $habilidad->delete();
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\RegistroActividadHelper;
 use App\Models\Portafolio;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
@@ -213,6 +214,8 @@ class PortafolioController extends Controller
         $portafolio->save();
 
         $portafolio->load('plantilla');
+
+        RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_plantilla');
 
         return response()->json([
             'success' => true,

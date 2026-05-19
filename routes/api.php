@@ -127,4 +127,6 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
     Route::post('/usuarios/{id}/suspender', [AdministradorController::class, 'suspender']);
     Route::post('/usuarios/{id}/reactivar', [AdministradorController::class, 'reactivar']);
     Route::get('/bitacora', [AdministradorController::class, 'bitacora']);
+    Route::get('/backup',[AdministradorController::class, 'backup']);
+    Route::post('/backup/importar',[AdministradorController::class, 'importar']);
 });

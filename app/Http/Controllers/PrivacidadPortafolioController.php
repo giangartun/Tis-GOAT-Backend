@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\RegistroActividadHelper;
 use Illuminate\Http\Request;
 use App\Models\Portafolio;
 use App\Models\Proyecto;
@@ -115,6 +116,8 @@ class PrivacidadPortafolioController extends Controller
             $request->redes_profesionales
         );
 
+        RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_privacidad');
+
         return response()->json([
             'message' => 'Configuración de privacidad actualizada correctamente.'
         ], 200);
@@ -132,6 +135,8 @@ class PrivacidadPortafolioController extends Controller
         ExperienciaAcademica::where('id_portafolio', $portafolio->id_portafolio)->update(['visible' => true]);
         ExperienciaLaboral::where('id_portafolio', $portafolio->id_portafolio)->update(['visible' => true]);
         RedesProfesionales::where('id_usuario', $usuario->id_usuario)->update(['visible' => true]);
+
+        RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_privacidad');
 
         return response()->json([
             'message' => 'Privacidad restablecida. Todo es visible nuevamente.'

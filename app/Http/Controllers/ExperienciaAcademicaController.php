@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\RegistroActividadHelper;
 use Illuminate\Http\Request;
 use App\Models\ExperienciaAcademica;
 use App\Models\Portafolio;
@@ -50,6 +51,8 @@ class ExperienciaAcademicaController extends Controller
 
         $academica = ExperienciaAcademica::create($request->all());
 
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_academica');
+
         return response()->json([
             'message' => 'Formación académica registrada con éxito.',
             'data'    => $academica
@@ -89,6 +92,8 @@ class ExperienciaAcademicaController extends Controller
 
         $academica->update($request->all());
 
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_academica');
+
         return response()->json([
             'message' => 'Formación académica actualizada con éxito.',
             'data'    => $academica
@@ -111,6 +116,8 @@ class ExperienciaAcademicaController extends Controller
         if (!$portafolio) {
             return response()->json(['message' => 'Acceso denegado.'], 403);
         }
+
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_academica');
 
         $academica->delete();
 

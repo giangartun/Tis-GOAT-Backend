@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\RegistroActividadHelper;
 use Illuminate\Http\Request;
 use App\Models\ExperienciaLaboral;
 use App\Models\Portafolio;
@@ -52,6 +53,8 @@ class ExperienciaLaboralController extends Controller
 
         $experiencia = ExperienciaLaboral::create($request->all());
 
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_laboral');
+
         return response()->json([
             'message' => 'Experiencia laboral registrada con éxito.',
             'data'    => $experiencia
@@ -91,6 +94,8 @@ class ExperienciaLaboralController extends Controller
 
         $experiencia->update($request->all());
 
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_laboral');
+
         return response()->json([
             'message' => 'Experiencia laboral actualizada con éxito.',
             'data'    => $experiencia
@@ -113,6 +118,8 @@ class ExperienciaLaboralController extends Controller
         if (!$portafolio) {
             return response()->json(['message' => 'Acceso denegado.'], 403);
         }
+
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_laboral');
 
         $experiencia->delete();
 

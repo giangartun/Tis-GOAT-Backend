@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\RegistroActividadHelper;
 use Illuminate\Http\Request;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Log;
@@ -57,6 +58,8 @@ class FotoPerfilController extends Controller
             $usuario->foto = $url;
             $usuario->save();
 
+            RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_foto');
+
             return response()->json([
                 'message'  => 'Foto actualizada correctamente',
                 'foto_url' => $url,
@@ -91,6 +94,8 @@ class FotoPerfilController extends Controller
 
             $usuario->foto = null;
             $usuario->save();
+
+            RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_foto');
 
             return response()->json([
                 'message' => 'Foto eliminada correctamente'

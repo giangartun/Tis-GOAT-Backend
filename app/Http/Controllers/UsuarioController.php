@@ -172,6 +172,10 @@ class UsuarioController extends Controller
             return response()->json(['message' => 'Credenciales incorrectas'], 401);
         }
 
+        if ($usuario->estado_cuenta === 'suspendido') {
+            return response()->json(['message' => 'Esta cuenta ha sido suspendida'], 403);
+        }
+
         $portafolio = Portafolio::where('id_usuario', $usuario->id_usuario)->first();
 
         $usuario->tokens()->delete();

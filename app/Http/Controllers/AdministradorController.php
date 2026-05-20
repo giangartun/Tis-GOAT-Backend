@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\SuspensionCuenta;
+use App\Mail\ReactivacionCuenta;
+use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -87,8 +90,17 @@ class AdministradorController extends Controller
 
         $usuario->estado_cuenta = 'suspendido';
         $usuario->save();
+        $usuario->tokens()->delete();
 
         RegistroActividadHelper::registrar($usuario->id_usuario, 'cuenta_suspendida');
+
+        try {
+            Mail::to($usuario->email)->send(
+                new SuspensionCuenta($usuario->nombre, $request->motivo ?? null)
+            );
+        } catch (\Exception $e) {
+            \Log::warning('No se pudo enviar correo de suspensión: ' . $e->getMessage());
+        }
 
         return response()->json([
             'message' => 'Cuenta suspendida correctamente.',
@@ -116,6 +128,14 @@ class AdministradorController extends Controller
         $usuario->save();
 
         RegistroActividadHelper::registrar($usuario->id_usuario, 'cuenta_reactivada');
+
+        try {
+            Mail::to($usuario->email)->send(
+                new ReactivacionCuenta($usuario->nombre)
+            );
+        } catch (\Exception $e) {
+            \Log::warning('No se pudo enviar correo de reactivación: ' . $e->getMessage());
+        }
 
         return response()->json([
             'message' => 'Cuenta reactivada correctamente.',

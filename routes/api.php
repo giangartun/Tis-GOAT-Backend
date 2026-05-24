@@ -129,4 +129,14 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
     Route::get('/bitacora', [AdministradorController::class, 'bitacora']);
     Route::get('/backup',[AdministradorController::class, 'backup']);
     Route::post('/backup/importar',[AdministradorController::class, 'importar']);
+
+    Route::get('/tecnologias', [AdministradorController::class, 'listarTecnologias']);
+    Route::post('/tecnologias', [AdministradorController::class, 'crearTecnologia']);
+    Route::put('/tecnologias/{id}', [AdministradorController::class, 'actualizarTecnologia']);
+    Route::delete('/tecnologias/{id}', [AdministradorController::class, 'eliminarTecnologia']);
+
+    Route::get('/grados', [AdministradorController::class, 'listarGrados']);
+    Route::post('/grados', [AdministradorController::class, 'crearGrado']);
+    Route::put('/grados/{id}', [AdministradorController::class, 'actualizarGrado']);
+    Route::delete('/grados/{id}', [AdministradorController::class, 'eliminarGrado']);
 });

@@ -21,6 +21,7 @@ use App\Models\Evidencia;
 use App\Models\Tecnologia;
 use App\Models\ProyectoTecnologia;
 use App\Models\Plantilla;
+use App\Models\Grado;
 
 class AdministradorController extends Controller
 {
@@ -361,6 +362,213 @@ class AdministradorController extends Controller
                 'error'   => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function listarTecnologias(Request $request)
+    {
+        if ($request->user()->tipo_usuario !== 'admin') {
+            return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        $query = Tecnologia::query();
+
+        if ($request->categoria) {
+            $query->where('categoria', $request->categoria);
+        }
+
+        if ($request->search) {
+            $query->where('nombre', 'ilike', '%' . $request->search . '%');
+        }
+
+        $tecnologias = $query->orderBy('nombre')->get();
+
+        return response()->json([
+            'total'       => $tecnologias->count(),
+            'tecnologias' => $tecnologias->map(fn($t) => [
+                'id_tecnologia' => $t->id_tecnologia,
+                'nombre'        => $t->nombre,
+                'categoria'     => $t->categoria ?? 'Sin categoría',
+            ]),
+        ]);
+    }
+
+    public function crearTecnologia(Request $request)
+    {
+        if ($request->user()->tipo_usuario !== 'admin') {
+            return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        $request->validate([
+            'nombre'    => 'required|string|max:255|unique:tecnologia,nombre',
+            'categoria' => 'required|string|max:255',
+        ], [
+            'nombre.required'    => 'El nombre de la tecnología es obligatorio.',
+            'categoria.required' => 'La categoría es obligatoria.',
+            'nombre.unique'      => 'Ya existe una tecnología con ese nombre.',
+        ]);
+
+        $tecnologia = Tecnologia::create([
+            'nombre'    => $request->nombre,
+            'categoria' => $request->categoria ?? null,
+        ]);
+
+        return response()->json([
+            'message'    => 'Tecnología creada correctamente.',
+            'tecnologia' => [
+                'id_tecnologia' => $tecnologia->id_tecnologia,
+                'nombre'        => $tecnologia->nombre,
+                'categoria'     => $tecnologia->categoria,
+            ],
+        ], 201);
+    }
+
+    public function actualizarTecnologia(Request $request, string $id)
+    {
+        if ($request->user()->tipo_usuario !== 'admin') {
+            return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        $tecnologia = Tecnologia::find($id);
+
+        if (!$tecnologia) {
+            return response()->json(['message' => 'Tecnología no encontrada.'], 404);
+        }
+
+        $request->validate([
+            'nombre'    => 'sometimes|required|string|max:255|unique:tecnologia,nombre,' . $id . ',id_tecnologia',
+            'categoria' => 'nullable|string|max:255',
+        ]);
+
+        if (!$request->hasAny(['nombre', 'categoria'])) {
+            return response()->json([
+                'message' => 'Debes enviar al menos un campo para actualizar.'
+            ], 422);
+        }
+
+        $tecnologia->update($request->only(['nombre', 'categoria']));
+
+        return response()->json([
+            'message'    => 'Tecnología actualizada correctamente.',
+            'tecnologia' => [
+                'id_tecnologia' => $tecnologia->id_tecnologia,
+                'nombre'        => $tecnologia->nombre,
+                'categoria'     => $tecnologia->categoria,
+            ],
+        ]);
+    }
+
+    public function eliminarTecnologia(Request $request, string $id)
+    {
+        if ($request->user()->tipo_usuario !== 'admin') {
+            return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        $tecnologia = Tecnologia::find($id);
+
+        if (!$tecnologia) {
+            return response()->json(['message' => 'Tecnología no encontrada.'], 404);
+        }
+
+        $tecnologia->proyectos()->detach();
+
+        $tecnologia->delete();
+
+        return response()->json(['message' => 'Tecnología y sus asociaciones eliminadas correctamente.']);
+    }
+
+    public function listarGrados(Request $request)
+    {
+        if ($request->user()->tipo_usuario !== 'admin') {
+            return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        $grados = Grado::orderBy('nombre_grado')->get();
+
+        return response()->json([
+            'total'  => $grados->count(),
+            'grados' => $grados->map(fn($g) => [
+                'id_grado'    => $g->id_grado,
+                'nombre_grado' => $g->nombre_grado,
+            ]),
+        ]);
+    }
+
+    public function crearGrado(Request $request)
+    {
+        if ($request->user()->tipo_usuario !== 'admin') {
+            return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        $request->validate([
+            'nombre_grado' => 'required|string|max:255|unique:grado,nombre_grado',
+        ], [
+            'nombre_grado.required' => 'El nombre del grado es obligatorio.',
+            'nombre_grado.unique'   => 'Ya existe un grado con ese nombre.',
+        ]);
+
+        $grado = Grado::create([
+            'nombre_grado' => $request->nombre_grado,
+        ]);
+
+        return response()->json([
+            'message' => 'Grado creado correctamente.',
+            'grado'   => [
+                'id_grado'    => $grado->id_grado,
+                'nombre_grado' => $grado->nombre_grado,
+            ],
+        ], 201);
+    }
+
+    public function actualizarGrado(Request $request, string $id)
+    {
+        if ($request->user()->tipo_usuario !== 'admin') {
+            return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        $grado = Grado::find($id);
+
+        if (!$grado) {
+            return response()->json(['message' => 'Grado no encontrado.'], 404);
+        }
+
+        $request->validate([
+            'nombre_grado' => 'required|string|max:255|unique:grado,nombre_grado,' . $id . ',id_grado',
+        ]);
+
+        if (!$request->has('nombre_grado')) {
+            return response()->json([
+                'message' => 'Debes enviar al menos un campo para actualizar.'
+            ], 422);
+        }
+
+        $grado->update(['nombre_grado' => $request->nombre_grado]);
+
+        return response()->json([
+            'message' => 'Grado actualizado correctamente.',
+            'grado'   => [
+                'id_grado'    => $grado->id_grado,
+                'nombre_grado' => $grado->nombre_grado,
+            ],
+        ]);
+    }
+
+    public function eliminarGrado(Request $request, string $id)
+    {
+        if ($request->user()->tipo_usuario !== 'admin') {
+            return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        $grado = Grado::find($id);
+
+        if (!$grado) {
+            return response()->json(['message' => 'Grado no encontrado.'], 404);
+        }
+
+        $grado->experienciaAcademicas()->detach();
+
+        $grado->delete();
+
+        return response()->json(['message' => 'Grado y sus asociaciones eliminadas correctamente.']);
     }
 
 }

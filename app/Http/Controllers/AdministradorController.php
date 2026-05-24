@@ -22,6 +22,8 @@ use App\Models\Tecnologia;
 use App\Models\ProyectoTecnologia;
 use App\Models\Plantilla;
 use App\Models\Grado;
+use App\Models\Anuncio;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class AdministradorController extends Controller
 {
@@ -569,6 +571,167 @@ class AdministradorController extends Controller
         $grado->delete();
 
         return response()->json(['message' => 'Grado y sus asociaciones eliminadas correctamente.']);
+    }
+
+    public function listarAnuncios(Request $request)
+    {
+        if ($request->user()->tipo_usuario !== 'admin') {
+            return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        $anuncios = Anuncio::orderBy('creado_en', 'desc')->get();
+
+        return response()->json([
+            'total'    => $anuncios->count(),
+            'anuncios' => $anuncios->map(fn($a) => [
+                'id_anuncio'      => $a->id_anuncio,
+                'titulo'          => $a->titulo,
+                'descripcion'     => $a->descripcion,
+                'foto_url'        => $a->foto_url,
+                'url_redireccion' => $a->url_redireccion,
+                'creado_en'       => $a->creado_en,
+            ]),
+        ]);
+    }
+
+    public function crearAnuncio(Request $request)
+    {
+        if ($request->user()->tipo_usuario !== 'admin') {
+            return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        $request->validate([
+            'titulo'          => 'required|string|max:255',
+            'descripcion'     => 'nullable|string',
+            'foto'            => 'nullable|image|max:5120|mimes:jpg,jpeg,png,webp',
+            'url_redireccion' => 'required|url|max:255',
+        ]);
+
+        // Validar que venga al menos descripcion o foto
+        if (!$request->filled('descripcion') && !$request->hasFile('foto')) {
+            return response()->json([
+                'message' => 'Debes enviar al menos una descripción o una imagen.',
+            ], 422);
+        }
+
+        $foto_url = null;
+
+        if ($request->hasFile('foto')) {
+            $upload   = Cloudinary::uploadApi()->upload($request->file('foto')->getRealPath(), [
+                'folder' => 'anuncios',
+            ]);
+            $foto_url = $upload['secure_url'];
+        }
+
+        $anuncio = Anuncio::create([
+            'titulo'          => $request->titulo,
+            'descripcion'     => $request->descripcion ?? null,
+            'foto_url'        => $foto_url,
+            'url_redireccion' => $request->url_redireccion,
+            'creado_en'       => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Anuncio creado correctamente.',
+            'anuncio' => [
+                'id_anuncio'      => $anuncio->id_anuncio,
+                'titulo'          => $anuncio->titulo,
+                'descripcion'     => $anuncio->descripcion,
+                'foto_url'        => $anuncio->foto_url,
+                'url_redireccion' => $anuncio->url_redireccion,
+                'creado_en'       => $anuncio->creado_en,
+            ],
+        ], 201);
+    }
+
+    public function actualizarAnuncio(Request $request, string $id)
+    {
+        if ($request->user()->tipo_usuario !== 'admin') {
+            return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        $anuncio = Anuncio::find($id);
+
+        if (!$anuncio) {
+            return response()->json(['message' => 'Anuncio no encontrado.'], 404);
+        }
+
+        if (!$request->hasAny(['titulo', 'descripcion', 'url_redireccion']) && !$request->hasFile('foto')) {
+            return response()->json([
+                'message' => 'Debes enviar al menos un campo para actualizar.',
+            ], 422);
+        }
+
+        $request->validate([
+            'titulo'          => 'sometimes|required|string|max:255',
+            'descripcion'     => 'nullable|string',
+            'foto'            => 'nullable|image|max:5120|mimes:jpg,jpeg,png,webp',
+            'url_redireccion' => 'sometimes|required|url|max:255',
+        ]);
+
+        // Si sube nueva foto, elimina la anterior de Cloudinary y sube la nueva
+        if ($request->hasFile('foto')) {
+            if ($anuncio->foto_url) {
+                $path = parse_url($anuncio->foto_url, PHP_URL_PATH);
+                preg_match('/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/', $path, $matches);
+                $publicId = $matches[1] ?? null;
+
+                if ($publicId) {
+                    Cloudinary::uploadApi()->destroy($publicId, ['resource_type' => 'image']);
+                }
+            }
+
+            $upload           = Cloudinary::uploadApi()->upload($request->file('foto')->getRealPath(), [
+                'folder' => 'anuncios',
+            ]);
+            $anuncio->foto_url = $upload['secure_url'];
+        }
+
+        if ($request->filled('titulo'))          $anuncio->titulo          = $request->titulo;
+        if ($request->filled('descripcion'))     $anuncio->descripcion     = $request->descripcion;
+        if ($request->filled('url_redireccion')) $anuncio->url_redireccion = $request->url_redireccion;
+
+        $anuncio->save();
+
+        return response()->json([
+            'message' => 'Anuncio actualizado correctamente.',
+            'anuncio' => [
+                'id_anuncio'      => $anuncio->id_anuncio,
+                'titulo'          => $anuncio->titulo,
+                'descripcion'     => $anuncio->descripcion,
+                'foto_url'        => $anuncio->foto_url,
+                'url_redireccion' => $anuncio->url_redireccion,
+                'creado_en'       => $anuncio->creado_en,
+            ],
+        ]);
+    }
+
+    public function eliminarAnuncio(Request $request, string $id)
+    {
+        if ($request->user()->tipo_usuario !== 'admin') {
+            return response()->json(['message' => 'No autorizado.'], 403);
+        }
+
+        $anuncio = Anuncio::find($id);
+
+        if (!$anuncio) {
+            return response()->json(['message' => 'Anuncio no encontrado.'], 404);
+        }
+
+        // Eliminar imagen de Cloudinary si existe
+        if ($anuncio->foto_url) {
+            $path = parse_url($anuncio->foto_url, PHP_URL_PATH);
+            preg_match('/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/', $path, $matches);
+            $publicId = $matches[1] ?? null;
+
+            if ($publicId) {
+                Cloudinary::uploadApi()->destroy($publicId, ['resource_type' => 'image']);
+            }
+        }
+
+        $anuncio->delete();
+
+        return response()->json(['message' => 'Anuncio eliminado correctamente.']);
     }
 
 }

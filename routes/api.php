@@ -139,4 +139,9 @@ Route::prefix('admin')->middleware('auth:sanctum')->group(function () {
     Route::post('/grados', [AdministradorController::class, 'crearGrado']);
     Route::put('/grados/{id}', [AdministradorController::class, 'actualizarGrado']);
     Route::delete('/grados/{id}', [AdministradorController::class, 'eliminarGrado']);
+
+    Route::get('/anuncios', [AdministradorController::class, 'listarAnuncios']);
+    Route::post('/anuncios', [AdministradorController::class, 'crearAnuncio']);
+    Route::post('/anuncios/{id}', [AdministradorController::class, 'actualizarAnuncio']);
+    Route::delete('/anuncios/{id}', [AdministradorController::class, 'eliminarAnuncio']);
 });

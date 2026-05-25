@@ -14,6 +14,7 @@ class ExperienciaAcademicaController extends Controller
     public function index($id_portafolio)
     {
         $academicas = ExperienciaAcademica::where('id_portafolio', $id_portafolio)
+            ->with('evidencias')
             ->orderBy('fecha_ini', 'desc')
             ->get();
 

@@ -40,4 +40,10 @@ class ExperienciaLaboral extends Model
     {
         return $this->belongsTo(Portafolio::class, 'id_portafolio');
     }
+
+    public function evidencias()
+    {
+    // Una experiencia laboral puede tener muchas evidencias
+    return $this->hasMany(Evidencia::class, 'id_experiencia_laboral', 'id_experiencia');
+    }
 }

@@ -15,6 +15,7 @@ class ExperienciaLaboralController extends Controller
     {
         // Buscamos las experiencias de ese portafolio ordenadas por fecha de inicio descendente
         $experiencias = ExperienciaLaboral::where('id_portafolio', $id_portafolio)
+            ->with('evidencias')
             ->orderBy('fecha_ini', 'desc')
             ->get();
 

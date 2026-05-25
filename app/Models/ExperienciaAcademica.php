@@ -40,4 +40,9 @@ class ExperienciaAcademica extends Model
     {
         return $this->belongsTo(Portafolio::class, 'id_portafolio');
     }
+    public function evidencias()
+    {
+    // Una experiencia académica puede tener muchas evidencias
+    return $this->hasMany(Evidencia::class, 'id_experiencia_academica', 'id_experiencia_academica');
+    }
 }

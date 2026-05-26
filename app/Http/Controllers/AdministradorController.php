@@ -212,7 +212,9 @@ class AdministradorController extends Controller
                 'rol'           => $r->usuario->tipo_usuario,
                 'estado_actual' => $r->usuario->estado_cuenta,
                 'tipo_accion'   => $r->evento,
-                'fecha_accion'  => \Carbon\Carbon::parse($r->fecha_hr)->format('d M Y, h:i a'),
+                'fecha_accion' => \Carbon\Carbon::parse($r->fecha_hr)
+                    ->timezone('America/La_Paz')
+                    ->format('d M Y, h:i a'),
             ]),
         ]);
     }

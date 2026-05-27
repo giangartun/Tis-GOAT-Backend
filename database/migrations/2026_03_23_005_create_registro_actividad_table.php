@@ -13,8 +13,8 @@ return new class extends Migration
             $table->string('id_usuario');
             $table->string('evento');
             $table->timestamp('fecha_hr')->nullable();
+            $table->json('contexto')->nullable();
 
-            // Foreign Key
             $table->foreign('id_usuario')
                 ->references('id_usuario')
                 ->on('usuario')

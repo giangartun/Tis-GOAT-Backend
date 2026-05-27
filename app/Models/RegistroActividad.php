@@ -20,10 +20,12 @@ class RegistroActividad extends Model
         'id_usuario',
         'evento',
         'fecha_hr',
+        'contexto',
     ];
 
     protected $casts = [
         'fecha_hr' => 'datetime',
+        'contexto' => 'array',
     ];
 
     public function uniqueIds(): array
@@ -31,7 +33,6 @@ class RegistroActividad extends Model
         return ['id_registro'];
     }
 
-    // Un registro pertenece a un usuario
     public function usuario()
     {
         return $this->belongsTo(Usuario::class, 'id_usuario');

@@ -116,7 +116,25 @@ class UsuarioController extends Controller
             $datos['fecha'] = now();
             $usuario = Usuario::create($datos);
             
-            RegistroActividadHelper::registrar($usuario->id_usuario, 'cuenta_creada');
+            RegistroActividadHelper::registrar($usuario->id_usuario, 'cuenta_creada', [
+                'tabla_principal_afectada'          => 'usuario',
+                'tablas_creadas' => ['usuario', 'portafolio'],  
+                'registro_nuevo' => [
+                    'id_usuario'       => $usuario->id_usuario,
+                    'nombre'           => $usuario->nombre,
+                    'apellido_paterno' => $usuario->apellido_paterno,
+                    'apellido_materno' => $usuario->apellido_materno,
+                    'email'            => $usuario->email,
+                    'tipo_usuario'     => $usuario->tipo_usuario,
+                    'estado_cuenta'    => $usuario->estado_cuenta,
+                    'fecha'            => $usuario->fecha,
+                ],
+                'portafolio_creado' => [
+                    'id_portafolio'   => $portafolio->id_portafolio,
+                    'enlace_pagi_web' => $portafolio->enlace_pagi_web,
+                    'visible'         => $portafolio->visible,
+                ],
+            ]);
 
             $codigo = substr($usuario->id_usuario, 0, 6);
             $nombre = Str::slug($usuario->nombre . '-' . $usuario->apellido_paterno);
@@ -183,7 +201,14 @@ class UsuarioController extends Controller
         $usuario->fecha_ult_acceso = now(); 
         $usuario->save();         
         
-        RegistroActividadHelper::registrar($usuario->id_usuario, 'inicio_sesion');
+        RegistroActividadHelper::registrar($usuario->id_usuario, 'inicio_sesion', [
+            'tabla_principal_afectada' => 'usuario',
+            'ip'    => $request->ip(),                          
+            'dispositivo' => $request->userAgent(),           
+            'fecha_ult_acceso_anterior' => optional(
+                \Carbon\Carbon::parse($usuario->getOriginal('fecha_ult_acceso'))
+            )->format('Y-m-d H:i:s'),
+        ]);
 
         $token = $usuario->createToken('sesion', ['*'], now()->addDays(7))->plainTextToken;
 
@@ -296,6 +321,12 @@ class UsuarioController extends Controller
 
         // 5. Borra el token para que no se pueda usar de nuevo
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+
+        RegistroActividadHelper::registrar($usuario->id_usuario, 'reseteo_contrasena', [
+            'tabla_principal_afectada'  => 'usuario',
+            'metodo' => 'enlace_email',          
+            'email'  => $usuario->email,
+        ]);
 
         return response()->json([
             'message' => 'Tu contraseña ha sido actualizada con éxito.'

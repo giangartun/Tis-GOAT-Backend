@@ -10,10 +10,8 @@ use Illuminate\Support\Facades\Validator;
 
 class ExperienciaLaboralController extends Controller
 {
-    // 1. LISTAR (GET): Ordenado de más reciente a más antiguo
     public function index($id_portafolio)
     {
-        // Buscamos las experiencias de ese portafolio ordenadas por fecha de inicio descendente
         $experiencias = ExperienciaLaboral::where('id_portafolio', $id_portafolio)
             ->with('evidencias')
             ->orderBy('fecha_ini', 'desc')
@@ -22,7 +20,6 @@ class ExperienciaLaboralController extends Controller
         return response()->json($experiencias, 200);
     }
 
-    // 2. CREAR (POST): Con validaciones lógicas
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -31,7 +28,6 @@ class ExperienciaLaboralController extends Controller
             'cargo'         => 'required|string|max:150',
             'descripcion'   => 'nullable|string',
             'fecha_ini'     => 'required|date',
-            // 'after_or_equal' asegura que la fecha fin no sea menor que la de inicio
             'fecha_fin'     => 'nullable|date|after_or_equal:fecha_ini',
             'visible'       => 'boolean'
         ], [
@@ -43,7 +39,6 @@ class ExperienciaLaboralController extends Controller
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        // Validación de Seguridad: Verificar que el portafolio pertenezca al usuario autenticado
         $portafolio = Portafolio::where('id_portafolio', $request->id_portafolio)
             ->where('id_usuario', $request->user()->id_usuario)
             ->first();
@@ -54,7 +49,19 @@ class ExperienciaLaboralController extends Controller
 
         $experiencia = ExperienciaLaboral::create($request->all());
 
-        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_laboral');
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_laboral', [
+            'tabla'        => 'experiencia_laboral',
+            'accion'       => 'creacion',
+            'id_afectado'  => $experiencia->id_experiencia,
+            'registro_nuevo' => [
+                'empresa'     => $experiencia->empresa,
+                'cargo'       => $experiencia->cargo,
+                'descripcion' => $experiencia->descripcion,
+                'fecha_ini'   => $experiencia->fecha_ini,
+                'fecha_fin'   => $experiencia->fecha_fin,
+                'visible'     => $experiencia->visible,
+            ],
+        ]);
 
         return response()->json([
             'message' => 'Experiencia laboral registrada con éxito.',
@@ -62,7 +69,6 @@ class ExperienciaLaboralController extends Controller
         ], 210);
     }
 
-    // 3. ACTUALIZAR (PUT)
     public function update(Request $request, $id)
     {
         $experiencia = ExperienciaLaboral::find($id);
@@ -71,7 +77,6 @@ class ExperienciaLaboralController extends Controller
             return response()->json(['message' => 'Registro no encontrado.'], 404);
         }
 
-        // Validación de Seguridad a través del portafolio del usuario logueado
         $portafolio = Portafolio::where('id_portafolio', $experiencia->id_portafolio)
             ->where('id_usuario', $request->user()->id_usuario)
             ->first();
@@ -93,9 +98,21 @@ class ExperienciaLaboralController extends Controller
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
+        $anterior = $experiencia->only([
+            'empresa', 'cargo', 'descripcion', 'fecha_ini', 'fecha_fin', 'visible'
+        ]);
+
         $experiencia->update($request->all());
 
-        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_laboral');
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_laboral', [
+            'tabla'             => 'experiencia_laboral',
+            'accion'            => 'actualizacion',
+            'id_afectado'       => $experiencia->id_experiencia,
+            'registro_anterior' => $anterior,
+            'registro_nuevo'    => $experiencia->only([
+                'empresa', 'cargo', 'descripcion', 'fecha_ini', 'fecha_fin', 'visible'
+            ]),
+        ]);
 
         return response()->json([
             'message' => 'Experiencia laboral actualizada con éxito.',
@@ -103,7 +120,6 @@ class ExperienciaLaboralController extends Controller
         ], 200);
     }
 
-    // 4. ELIMINAR (DELETE)
     public function destroy(Request $request, $id)
     {
         $experiencia = ExperienciaLaboral::find($id);
@@ -120,7 +136,19 @@ class ExperienciaLaboralController extends Controller
             return response()->json(['message' => 'Acceso denegado.'], 403);
         }
 
-        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_laboral');
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_laboral', [
+            'tabla'             => 'experiencia_laboral',
+            'accion'            => 'eliminacion',
+            'id_afectado'       => $experiencia->id_experiencia,
+            'registro_anterior' => [
+                'empresa'     => $experiencia->empresa,
+                'cargo'       => $experiencia->cargo,
+                'descripcion' => $experiencia->descripcion,
+                'fecha_ini'   => $experiencia->fecha_ini,
+                'fecha_fin'   => $experiencia->fecha_fin,
+                'visible'     => $experiencia->visible,
+            ],
+        ]);
 
         $experiencia->delete();
 

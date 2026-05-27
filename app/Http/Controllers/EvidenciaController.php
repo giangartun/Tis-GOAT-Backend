@@ -31,21 +31,27 @@ class EvidenciaController extends Controller
         };
     }
 
-    // Extrae el public_id de la URL de Cloudinary
     private function extraerPublicId(string $url): string
     {
-        // URL ejemplo: https://res.cloudinary.com/cloud/image/upload/v123456/evidencias/id/archivo.pdf
         $path = parse_url($url, PHP_URL_PATH);
-        // Elimina /cloud_name/resource_type/upload/vXXXXX/ y la extensión
         preg_match('/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/', $path, $matches);
         return $matches[1] ?? '';
+    }
+
+    private function detectarResourceType(string $tipo): string
+    {
+        return match($tipo) {
+            'video', 'audio' => 'video',
+            'documento', 'hoja_calculo', 'presentacion' => 'raw',
+            default => 'image',
+        };
     }
 
     public function subir(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'archivo'     => 'required|file|max:20480|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,ppt,pptx,mp4,mp3,wav',
-            'id_proyecto' => 'nullable|exists:proyecto,id_proyecto',
+            'archivo'      => 'required|file|max:20480|mimes:jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,ppt,pptx,mp4,mp3,wav',
+            'id_proyecto'  => 'nullable|exists:proyecto,id_proyecto',
             'id_academica' => 'nullable|exists:experiencia_academica,id_experiencia_academica',
             'id_laboral'   => 'nullable|exists:experiencia_laboral,id_experiencia',
         ]);
@@ -78,18 +84,40 @@ class EvidenciaController extends Controller
             $preview = $this->generarVistaPrevia($url, $tipo);
 
             $evidencia = Evidencia::create([
-                'tipo'           => $tipo,
-                'url_evidencia'  => $url,
-                'nombre_archivo' => $nombre,
-                'foto_url'       => $tipo === 'imagen',
-                'tamano_bytes'   => $size,
-                'fecha_subida'   => now(),
-                'id_proyecto'    => $request->id_proyecto,
+                'tipo'                     => $tipo,
+                'url_evidencia'            => $url,
+                'nombre_archivo'           => $nombre,
+                'foto_url'                 => $tipo === 'imagen',
+                'tamano_bytes'             => $size,
+                'fecha_subida'             => now(),
+                'id_proyecto'              => $request->id_proyecto,
                 'id_experiencia_academica' => $request->id_academica,
                 'id_experiencia_laboral'   => $request->id_laboral,
             ]);
 
-            RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_evidencias');
+            // determinar a qué entidad está asociada esta evidencia
+            $entidadAsociada = match(true) {
+                !is_null($request->id_proyecto)  => ['tipo' => 'proyecto',              'id' => $request->id_proyecto],
+                !is_null($request->id_academica) => ['tipo' => 'experiencia_academica', 'id' => $request->id_academica],
+                !is_null($request->id_laboral)   => ['tipo' => 'experiencia_laboral',   'id' => $request->id_laboral],
+                default                          => ['tipo' => 'sin_asociacion',         'id' => null],
+            };
+
+            RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_evidencias', [
+                'tabla'          => 'evidencias',
+                'accion'         => 'subida',
+                'id_afectado'    => $evidencia->id_evidencia,
+                'entidad_padre'  => $entidadAsociada,   
+                'registro_nuevo' => [
+                    'nombre_archivo' => $nombre,
+                    'tipo'           => $tipo,
+                    'mime'           => $mime,
+                    'tamano_kb'      => round($size / 1024, 2),
+                    'url_evidencia'  => $url,
+                    'public_id'      => $this->extraerPublicId($url),   
+                    'proveedor'      => 'cloudinary',
+                ],
+            ]);
 
             return response()->json([
                 'message'   => 'Archivo subido correctamente',
@@ -136,15 +164,6 @@ class EvidenciaController extends Controller
         ]);
     }
 
-    private function detectarResourceType(string $tipo): string
-    {
-        return match($tipo) {
-            'video', 'audio' => 'video',
-            'documento', 'hoja_calculo', 'presentacion' => 'raw',
-            default => 'image', // imagen, pdf
-        };
-    }
-
     public function eliminar($id)
     {
         try {
@@ -156,12 +175,26 @@ class EvidenciaController extends Controller
 
             $publicId     = $this->extraerPublicId($evidencia->url_evidencia);
             $resourceType = $this->detectarResourceType($evidencia->tipo);
+            $id_usuario   = $evidencia->proyecto->portafolio->id_usuario;
 
             Cloudinary::uploadApi()->destroy($publicId, [
                 'resource_type' => $resourceType
             ]);
 
-            RegistroActividadHelper::registrar($evidencia->proyecto->portafolio->id_usuario,'modificacion_evidencias');
+            RegistroActividadHelper::registrar($id_usuario, 'modificacion_evidencias', [
+                'tabla'             => 'evidencias',
+                'accion'            => 'eliminacion',
+                'id_afectado'       => $evidencia->id_evidencia,
+                'registro_anterior' => [
+                    'nombre_archivo' => $evidencia->nombre_archivo,
+                    'tipo'           => $evidencia->tipo,
+                    'tamano_kb'      => round($evidencia->tamano_bytes / 1024, 2),
+                    'url_evidencia'  => $evidencia->url_evidencia,
+                    'public_id'      => $publicId,      
+                    'proveedor'      => 'cloudinary',
+                    'id_proyecto'    => $evidencia->id_proyecto,
+                ],
+            ]);
 
             $evidencia->delete();
 

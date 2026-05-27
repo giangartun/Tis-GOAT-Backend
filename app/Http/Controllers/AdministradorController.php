@@ -95,7 +95,16 @@ class AdministradorController extends Controller
         $usuario->save();
         $usuario->tokens()->delete();
 
-        RegistroActividadHelper::registrar($usuario->id_usuario, 'cuenta_suspendida');
+        RegistroActividadHelper::registrar($usuario->id_usuario, 'cuenta_suspendida', [
+            'tabla'          => 'usuario',
+            'accion'         => 'suspension',
+            'id_afectado'    => $usuario->id_usuario,
+            'motivo'         => $request->motivo ?? null,
+            'ejecutado_por'  => $request->user()->id_usuario, 
+            'registro_nuevo' => [
+                'estado_cuenta' => 'suspendido',
+            ],
+        ]);
 
         try {
             Mail::to($usuario->email)->send(
@@ -130,7 +139,15 @@ class AdministradorController extends Controller
         $usuario->estado_cuenta = 'activo';
         $usuario->save();
 
-        RegistroActividadHelper::registrar($usuario->id_usuario, 'cuenta_reactivada');
+        RegistroActividadHelper::registrar($usuario->id_usuario, 'cuenta_reactivada', [
+            'tabla'          => 'usuario',
+            'accion'         => 'reactivacion',
+            'id_afectado'    => $usuario->id_usuario,
+            'ejecutado_por'  => $request->user()->id_usuario, 
+            'registro_nuevo' => [
+                'estado_cuenta' => 'activo',
+            ],
+        ]);
 
         try {
             Mail::to($usuario->email)->send(
@@ -354,6 +371,14 @@ class AdministradorController extends Controller
                     DB::table('registro_actividad')->insert($tablas['registro_actividad']);
                 }
             });
+
+            RegistroActividadHelper::registrar($request->user()->id_usuario, 'importacion_backup', [
+                'tabla'              => 'todas',
+                'accion'             => 'importacion',
+                'ejecutado_por'      => $request->user()->id_usuario,
+                'archivo'            => $request->file('archivo')->getClientOriginalName(),
+                'tablas_restauradas' => array_keys(array_filter($tablas, fn($t) => !empty($t))),
+            ]);
 
             return response()->json([
                 'message'      => 'Backup importado correctamente.',

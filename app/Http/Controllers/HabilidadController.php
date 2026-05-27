@@ -11,17 +11,13 @@ use Illuminate\Support\Str;
 
 class HabilidadController extends Controller
 {
-    // Obtener habilidades agrupadas por tipo y categoria
     public function index(Request $request)
     {
-        $usuario = $request->user();
-
+        $usuario    = $request->user();
         $portafolio = Portafolio::where('id_usuario', $usuario->id_usuario)->first();
 
         if (!$portafolio) {
-            return response()->json([
-                'message' => 'No tienes un portafolio asociado'
-            ], 404);
+            return response()->json(['message' => 'No tienes un portafolio asociado'], 404);
         }
 
         $habilidades = Habilidad::where('id_portafolio', $portafolio->id_portafolio)
@@ -33,17 +29,13 @@ class HabilidadController extends Controller
         return response()->json($habilidades);
     }
 
-    // Mostrar una habilidad específica
     public function show(Request $request, $id)
     {
-        $usuario = $request->user();
-
+        $usuario    = $request->user();
         $portafolio = Portafolio::where('id_usuario', $usuario->id_usuario)->first();
 
         if (!$portafolio) {
-            return response()->json([
-                'message' => 'No tienes un portafolio asociado'
-            ], 404);
+            return response()->json(['message' => 'No tienes un portafolio asociado'], 404);
         }
 
         $habilidad = Habilidad::where('id_habilidad', $id)
@@ -51,25 +43,19 @@ class HabilidadController extends Controller
             ->first();
 
         if (!$habilidad) {
-            return response()->json([
-                'message' => 'Habilidad no encontrada'
-            ], 404);
+            return response()->json(['message' => 'Habilidad no encontrada'], 404);
         }
 
         return response()->json($habilidad);
     }
 
-    // Crear habilidad
     public function store(Request $request)
     {
-        $usuario = $request->user();
-
+        $usuario    = $request->user();
         $portafolio = Portafolio::where('id_usuario', $usuario->id_usuario)->first();
 
         if (!$portafolio) {
-            return response()->json([
-                'message' => 'No tienes un portafolio asociado'
-            ], 404);
+            return response()->json(['message' => 'No tienes un portafolio asociado'], 404);
         }
 
         $request->validate([
@@ -87,10 +73,21 @@ class HabilidadController extends Controller
             'categoria'     => $request->categoria,
             'nivel'         => $request->nivel,
             'visible'       => $request->visible ?? true,
-            'id_portafolio' => $portafolio->id_portafolio
+            'id_portafolio' => $portafolio->id_portafolio,
         ]);
 
-        RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_habilidades');
+        RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_habilidades', [
+            'tabla'        => 'habilidades',
+            'accion'       => 'creacion',
+            'id_afectado'  => $habilidad->id_habilidad,
+            'registro_nuevo' => [
+                'nombre'    => $habilidad->nombre,
+                'tipo'      => $habilidad->tipo,
+                'categoria' => $habilidad->categoria,
+                'nivel'     => $habilidad->nivel,
+                'visible'   => $habilidad->visible,
+            ],
+        ]);
 
         return response()->json([
             'message'   => 'Habilidad creada',
@@ -98,17 +95,13 @@ class HabilidadController extends Controller
         ], 201);
     }
 
-    // Actualizar habilidad
     public function update(Request $request, $id)
     {
-        $usuario = $request->user();
-
+        $usuario    = $request->user();
         $portafolio = Portafolio::where('id_usuario', $usuario->id_usuario)->first();
 
         if (!$portafolio) {
-            return response()->json([
-                'message' => 'No tienes un portafolio asociado'
-            ], 404);
+            return response()->json(['message' => 'No tienes un portafolio asociado'], 404);
         }
 
         $habilidad = Habilidad::where('id_habilidad', $id)
@@ -116,9 +109,7 @@ class HabilidadController extends Controller
             ->first();
 
         if (!$habilidad) {
-            return response()->json([
-                'message' => 'Habilidad no encontrada o no te pertenece'
-            ], 404);
+            return response()->json(['message' => 'Habilidad no encontrada o no te pertenece'], 404);
         }
 
         $request->validate([
@@ -129,11 +120,18 @@ class HabilidadController extends Controller
             'visible'   => 'sometimes|boolean'
         ]);
 
-        $habilidad->update($request->only([
-            'nombre', 'tipo', 'categoria', 'nivel', 'visible'
-        ]));
+        // capturar ANTES de modificar
+        $anterior = $habilidad->only(['nombre', 'tipo', 'categoria', 'nivel', 'visible']);
 
-        RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_habilidades');
+        $habilidad->update($request->only(['nombre', 'tipo', 'categoria', 'nivel', 'visible']));
+
+        RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_habilidades', [
+            'tabla'             => 'habilidades',
+            'accion'            => 'actualizacion',
+            'id_afectado'       => $habilidad->id_habilidad,
+            'registro_anterior' => $anterior,
+            'registro_nuevo'    => $habilidad->only(['nombre', 'tipo', 'categoria', 'nivel', 'visible']),
+        ]);
 
         return response()->json([
             'message'   => 'Habilidad actualizada',
@@ -141,17 +139,13 @@ class HabilidadController extends Controller
         ]);
     }
 
-    // Eliminar habilidad
     public function destroy(Request $request, $id)
     {
-        $usuario = $request->user();
-
+        $usuario    = $request->user();
         $portafolio = Portafolio::where('id_usuario', $usuario->id_usuario)->first();
 
         if (!$portafolio) {
-            return response()->json([
-                'message' => 'No tienes un portafolio asociado'
-            ], 404);
+            return response()->json(['message' => 'No tienes un portafolio asociado'], 404);
         }
 
         $habilidad = Habilidad::where('id_habilidad', $id)
@@ -159,17 +153,24 @@ class HabilidadController extends Controller
             ->first();
 
         if (!$habilidad) {
-            return response()->json([
-                'message' => 'Habilidad no encontrada o no te pertenece'
-            ], 404);
+            return response()->json(['message' => 'Habilidad no encontrada o no te pertenece'], 404);
         }
 
-        RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_habilidades');
+        RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_habilidades', [
+            'tabla'             => 'habilidades',
+            'accion'            => 'eliminacion',
+            'id_afectado'       => $habilidad->id_habilidad,
+            'registro_anterior' => [
+                'nombre'    => $habilidad->nombre,
+                'tipo'      => $habilidad->tipo,
+                'categoria' => $habilidad->categoria,
+                'nivel'     => $habilidad->nivel,
+                'visible'   => $habilidad->visible,
+            ],
+        ]);
 
         $habilidad->delete();
 
-        return response()->json([
-            'message' => 'Habilidad eliminada'
-        ]);
+        return response()->json(['message' => 'Habilidad eliminada']);
     }
 }

@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Validator;
 
 class ExperienciaAcademicaController extends Controller
 {
-    // 1. LISTAR (GET): Público y ordenado desde el más reciente
     public function index($id_portafolio)
     {
         $academicas = ExperienciaAcademica::where('id_portafolio', $id_portafolio)
@@ -21,7 +20,6 @@ class ExperienciaAcademicaController extends Controller
         return response()->json($academicas, 200);
     }
 
-    // 2. CREAR (POST): Protegido por Token y validado
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -41,7 +39,6 @@ class ExperienciaAcademicaController extends Controller
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        // Seguridad: El portafolio debe pertenecer al usuario autenticado
         $portafolio = Portafolio::where('id_portafolio', $request->id_portafolio)
             ->where('id_usuario', $request->user()->id_usuario)
             ->first();
@@ -52,7 +49,19 @@ class ExperienciaAcademicaController extends Controller
 
         $academica = ExperienciaAcademica::create($request->all());
 
-        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_academica');
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_academica', [
+            'tabla'          => 'experiencia_academica',
+            'accion'         => 'creacion',
+            'id_afectado'    => $academica->id_experiencia_academica,
+            'registro_nuevo' => [
+                'institucion' => $academica->institucion,
+                'titulo'      => $academica->titulo,
+                'descripcion' => $academica->descripcion,
+                'fecha_ini'   => $academica->fecha_ini,
+                'fecha_fin'   => $academica->fecha_fin,
+                'visible'     => $academica->visible,
+            ],
+        ]);
 
         return response()->json([
             'message' => 'Formación académica registrada con éxito.',
@@ -60,7 +69,6 @@ class ExperienciaAcademicaController extends Controller
         ], 201);
     }
 
-    // 3. ACTUALIZAR (PUT)
     public function update(Request $request, $id)
     {
         $academica = ExperienciaAcademica::find($id);
@@ -69,7 +77,6 @@ class ExperienciaAcademicaController extends Controller
             return response()->json(['message' => 'Registro no encontrado.'], 404);
         }
 
-        // Seguridad: Validar dueño mediante el portafolio
         $portafolio = Portafolio::where('id_portafolio', $academica->id_portafolio)
             ->where('id_usuario', $request->user()->id_usuario)
             ->first();
@@ -91,9 +98,22 @@ class ExperienciaAcademicaController extends Controller
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
+        // capturar ANTES de modificar
+        $anterior = $academica->only([
+            'institucion', 'titulo', 'descripcion', 'fecha_ini', 'fecha_fin', 'visible'
+        ]);
+
         $academica->update($request->all());
 
-        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_academica');
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_academica', [
+            'tabla'             => 'experiencia_academica',
+            'accion'            => 'actualizacion',
+            'id_afectado'       => $academica->id_experiencia_academica,
+            'registro_anterior' => $anterior,
+            'registro_nuevo'    => $academica->only([
+                'institucion', 'titulo', 'descripcion', 'fecha_ini', 'fecha_fin', 'visible'
+            ]),
+        ]);
 
         return response()->json([
             'message' => 'Formación académica actualizada con éxito.',
@@ -101,7 +121,6 @@ class ExperienciaAcademicaController extends Controller
         ], 200);
     }
 
-    // 4. ELIMINAR (DELETE)
     public function destroy(Request $request, $id)
     {
         $academica = ExperienciaAcademica::find($id);
@@ -118,7 +137,19 @@ class ExperienciaAcademicaController extends Controller
             return response()->json(['message' => 'Acceso denegado.'], 403);
         }
 
-        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_academica');
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_academica', [
+            'tabla'             => 'experiencia_academica',
+            'accion'            => 'eliminacion',
+            'id_afectado'       => $academica->id_experiencia_academica,
+            'registro_anterior' => [
+                'institucion' => $academica->institucion,
+                'titulo'      => $academica->titulo,
+                'descripcion' => $academica->descripcion,
+                'fecha_ini'   => $academica->fecha_ini,
+                'fecha_fin'   => $academica->fecha_fin,
+                'visible'     => $academica->visible,
+            ],
+        ]);
 
         $academica->delete();
 

@@ -25,9 +25,11 @@ class FotoPerfilController extends Controller
                 return response()->json(['message' => 'Archivo inválido'], 400);
             }
 
-            // Eliminar foto anterior de Cloudinary si existe
-            if ($usuario->foto) {
-                $publicId = $this->extraerPublicId($usuario->foto);
+            // capturar ANTES de reemplazar
+            $urlAnterior = $usuario->foto;
+
+            if ($urlAnterior) {
+                $publicId = $this->extraerPublicId($urlAnterior);
                 if ($publicId) {
                     Cloudinary::uploadApi()->destroy($publicId, [
                         'resource_type' => 'image'
@@ -35,7 +37,6 @@ class FotoPerfilController extends Controller
                 }
             }
 
-            // Subir nueva foto
             $upload = Cloudinary::uploadApi()->upload(
                 $file->getRealPath(),
                 [
@@ -54,11 +55,21 @@ class FotoPerfilController extends Controller
 
             $url = $upload['secure_url'];
 
-            // Guardar URL en la base de datos
             $usuario->foto = $url;
             $usuario->save();
 
-            RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_foto');
+            RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_foto', [
+                'tabla'  => 'usuario',
+                'accion' => $urlAnterior ? 'reemplazo' : 'carga_inicial',  
+                'registro_anterior' => [
+                    'foto_url' => $urlAnterior,     
+                ],
+                'registro_nuevo' => [
+                    'foto_url'   => $url,
+                    'public_id'  => $this->extraerPublicId($url),  
+                    'proveedor'  => 'cloudinary',
+                ],
+            ]);
 
             return response()->json([
                 'message'  => 'Foto actualizada correctamente',
@@ -79,13 +90,13 @@ class FotoPerfilController extends Controller
         $usuario = $request->user();
 
         if (!$usuario->foto) {
-            return response()->json([
-                'message' => 'No tienes foto de perfil'
-            ], 404);
+            return response()->json(['message' => 'No tienes foto de perfil'], 404);
         }
 
         try {
-            $publicId = $this->extraerPublicId($usuario->foto);
+            $urlAnterior = $usuario->foto;
+            $publicId    = $this->extraerPublicId($urlAnterior);
+
             if ($publicId) {
                 Cloudinary::uploadApi()->destroy($publicId, [
                     'resource_type' => 'image'
@@ -95,11 +106,16 @@ class FotoPerfilController extends Controller
             $usuario->foto = null;
             $usuario->save();
 
-            RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_foto');
+            RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_foto', [
+                'tabla'  => 'usuario',
+                'accion' => 'eliminacion',
+                'registro_anterior' => [
+                    'foto_url'  => $urlAnterior,
+                    'public_id' => $publicId,
+                ],
+            ]);
 
-            return response()->json([
-                'message' => 'Foto eliminada correctamente'
-            ], 200);
+            return response()->json(['message' => 'Foto eliminada correctamente'], 200);
 
         } catch (\Exception $e) {
             Log::error('Error eliminando foto: ' . $e->getMessage());

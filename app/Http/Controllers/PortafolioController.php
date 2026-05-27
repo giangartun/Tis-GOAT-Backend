@@ -21,13 +21,13 @@ class PortafolioController extends Controller
             }
         ])->get()->map(function ($portafolio) {
             return [
-                'id_portafolio' => $portafolio->id_portafolio,
+                'id_portafolio'   => $portafolio->id_portafolio,
                 'enlace_pagi_web' => $portafolio->enlace_pagi_web,
                 'usuario' => [
-                    'nombre' => trim(($portafolio->usuario->nombre ?? '') . ' ' . ($portafolio->usuario->apellido_paterno ?? '')),
-                    'profesion' => $portafolio->usuario->biografia ?? null,
-                    'foto' => $portafolio->usuario->foto ?? null,
-                    'ubicacion' => null,
+                    'nombre'     => trim(($portafolio->usuario->nombre ?? '') . ' ' . ($portafolio->usuario->apellido_paterno ?? '')),
+                    'profesion'  => $portafolio->usuario->biografia ?? null,
+                    'foto'       => $portafolio->usuario->foto ?? null,
+                    'ubicacion'  => null,
                 ],
                 'habilidades' => $portafolio->habilidades->map(fn($h) => [
                     'nombre' => $h->nombre,
@@ -43,10 +43,10 @@ class PortafolioController extends Controller
         $portafolio = Portafolio::with([
             'usuario',
             'plantilla',
-            'habilidades' => fn($q) => $q->where('visible', true),
+            'habilidades'          => fn($q) => $q->where('visible', true),
             'experienciasLaborales',
             'experienciasAcademicas',
-            'proyectos' => fn($q) => $q->where('visible', true),
+            'proyectos'            => fn($q) => $q->where('visible', true),
         ])->where('id_portafolio', $id_portafolio)->first();
 
         if (!$portafolio) {
@@ -78,26 +78,26 @@ class PortafolioController extends Controller
 
         return response()->json([
             'usuario' => [
-                'id_usuario' => $usuario->id_usuario,
-                'nombre' => $usuario->nombre,
+                'id_usuario'       => $usuario->id_usuario,
+                'nombre'           => $usuario->nombre,
                 'apellido_paterno' => $usuario->apellido_paterno,
                 'apellido_materno' => $usuario->apellido_materno,
-                'email' => $usuario->email,
-                'biografia' => $usuario->biografia,
-                'foto' => $usuario->foto,
-                'fecha' => $usuario->fecha,
+                'email'            => $usuario->email,
+                'biografia'        => $usuario->biografia,
+                'foto'             => $usuario->foto,
+                'fecha'            => $usuario->fecha,
             ],
             'portafolio' => $portafolio ? [
-                'id_portafolio' => $portafolio->id_portafolio,
-                'id_plantilla' => $portafolio->id_plantilla,
+                'id_portafolio'   => $portafolio->id_portafolio,
+                'id_plantilla'    => $portafolio->id_plantilla,
                 'enlace_pagi_web' => $portafolio->enlace_pagi_web,
-                'visible' => $portafolio->visible,
-                'creado_en' => $portafolio->creado_en,
-                'fecha_act' => $portafolio->fecha_act,
-                'plantilla' => $portafolio->plantilla ? [
+                'visible'         => $portafolio->visible,
+                'creado_en'       => $portafolio->creado_en,
+                'fecha_act'       => $portafolio->fecha_act,
+                'plantilla'       => $portafolio->plantilla ? [
                     'id_plantilla' => $portafolio->plantilla->id_plantilla,
-                    'nombre' => $portafolio->plantilla->nombre ?? null,
-                    'descripcion' => $portafolio->plantilla->descripcion ?? null,
+                    'nombre'       => $portafolio->plantilla->nombre ?? null,
+                    'descripcion'  => $portafolio->plantilla->descripcion ?? null,
                     'url_vista'    => $portafolio->plantilla->url_vista ?? null,
                 ] : null,
             ] : null,
@@ -105,9 +105,9 @@ class PortafolioController extends Controller
             'redes_profesionales' => ($usuario->redesProfesionales ?? collect())->map(function ($red) {
                 return [
                     'id_redes_prof' => $red->id_redes_prof,
-                    'nombre_red' => $red->nombre_red,
-                    'url_red' => $red->url_red,
-                    'visible' => $red->visible,
+                    'nombre_red'    => $red->nombre_red,
+                    'url_red'       => $red->url_red,
+                    'visible'       => $red->visible,
                 ];
             })->values(),
 
@@ -115,11 +115,11 @@ class PortafolioController extends Controller
                 ? $portafolio->habilidades->map(function ($habilidad) {
                     return [
                         'id_habilidad' => $habilidad->id_habilidad,
-                        'nombre' => $habilidad->nombre,
-                        'tipo' => $habilidad->tipo,
-                        'categoria' => $habilidad->categoria,
-                        'nivel' => $habilidad->nivel,
-                        'visible' => $habilidad->visible,
+                        'nombre'       => $habilidad->nombre,
+                        'tipo'         => $habilidad->tipo,
+                        'categoria'    => $habilidad->categoria,
+                        'nivel'        => $habilidad->nivel,
+                        'visible'      => $habilidad->visible,
                     ];
                 })->values()
                 : [],
@@ -128,12 +128,12 @@ class PortafolioController extends Controller
                 ? $portafolio->experienciasLaborales->map(function ($exp) {
                     return [
                         'id_experiencia' => $exp->id_experiencia,
-                        'empresa' => $exp->empresa,
-                        'cargo' => $exp->cargo,
-                        'descripcion' => $exp->descripcion,
-                        'fecha_ini' => $exp->fecha_ini,
-                        'fecha_fin' => $exp->fecha_fin,
-                        'visible' => $exp->visible,
+                        'empresa'        => $exp->empresa,
+                        'cargo'          => $exp->cargo,
+                        'descripcion'    => $exp->descripcion,
+                        'fecha_ini'      => $exp->fecha_ini,
+                        'fecha_fin'      => $exp->fecha_fin,
+                        'visible'        => $exp->visible,
                     ];
                 })->values()
                 : [],
@@ -142,12 +142,12 @@ class PortafolioController extends Controller
                 ? $portafolio->experienciasAcademicas->map(function ($exp) {
                     return [
                         'id_experiencia_academica' => $exp->id_experiencia_academica,
-                        'institucion' => $exp->institucion,
-                        'titulo' => $exp->titulo,
-                        'descripcion' => $exp->descripcion,
-                        'fecha_ini' => $exp->fecha_ini,
-                        'fecha_fin' => $exp->fecha_fin,
-                        'visible' => $exp->visible,
+                        'institucion'              => $exp->institucion,
+                        'titulo'                   => $exp->titulo,
+                        'descripcion'              => $exp->descripcion,
+                        'fecha_ini'                => $exp->fecha_ini,
+                        'fecha_fin'                => $exp->fecha_fin,
+                        'visible'                  => $exp->visible,
                     ];
                 })->values()
                 : [],
@@ -155,25 +155,25 @@ class PortafolioController extends Controller
             'proyectos' => $portafolio
                 ? $portafolio->proyectos->map(function ($proyecto) {
                     return [
-                        'id_proyecto' => $proyecto->id_proyecto,
-                        'nombre' => $proyecto->nombre,
-                        'descripcion' => $proyecto->descripcion,
+                        'id_proyecto'  => $proyecto->id_proyecto,
+                        'nombre'       => $proyecto->nombre,
+                        'descripcion'  => $proyecto->descripcion,
                         'url_proyecto' => $proyecto->url_proyecto,
-                        'imagen_url' => $proyecto->imagen_url,
-                        'fecha_ini' => $proyecto->fecha_ini,
-                        'fecha_fin' => $proyecto->fecha_fin,
-                        'visible' => $proyecto->visible,
-                        'tecnologias' => $proyecto->tecnologias->map(function ($tec) {
+                        'imagen_url'   => $proyecto->imagen_url,
+                        'fecha_ini'    => $proyecto->fecha_ini,
+                        'fecha_fin'    => $proyecto->fecha_fin,
+                        'visible'      => $proyecto->visible,
+                        'tecnologias'  => $proyecto->tecnologias->map(function ($tec) {
                             return [
                                 'id_tecnologia' => $tec->id_tecnologia,
-                                'nombre' => $tec->nombre,
-                                'tipo' => $tec->tipo ?? null,
+                                'nombre'        => $tec->nombre,
+                                'tipo'          => $tec->tipo ?? null,
                             ];
                         })->values(),
                         'evidencias' => $proyecto->evidencias->map(function ($evi) {
                             return [
                                 'id_evidencia' => $evi->id_evidencia,
-                                'url' => $evi->url ?? null,
+                                'url'          => $evi->url ?? null,
                             ];
                         })->values(),
                     ];
@@ -182,9 +182,6 @@ class PortafolioController extends Controller
         ], 200);
     }
 
-    /**
-     * Actualiza la plantilla seleccionada del portafolio del usuario autenticado
-     */
     public function actualizarPlantilla(Request $request)
     {
         $request->validate([
@@ -209,22 +206,37 @@ class PortafolioController extends Controller
             ], 404);
         }
 
+        // capturar ANTES de modificar
+        $plantillaAnterior = $portafolio->id_plantilla;
+
         $portafolio->id_plantilla = $request->id_plantilla;
-        $portafolio->fecha_act = now();
+        $portafolio->fecha_act    = now();
         $portafolio->save();
 
         $portafolio->load('plantilla');
 
-        RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_plantilla');
+        RegistroActividadHelper::registrar($usuario->id_usuario, 'modificacion_plantilla', [
+            'tabla'        => 'portafolios',
+            'accion'       => 'actualizacion',
+            'id_afectado'  => $portafolio->id_portafolio,
+            'registro_anterior' => [
+                'id_plantilla' => $plantillaAnterior,   // null si nunca tuvo plantilla
+            ],
+            'registro_nuevo' => [
+                'id_plantilla' => $portafolio->id_plantilla,
+                'nombre'       => $portafolio->plantilla->nombre ?? null,
+                'url_vista'    => $portafolio->plantilla->url_vista ?? null,
+            ],
+        ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Plantilla actualizada correctamente.',
-            'data' => [
+            'data'    => [
                 'id_portafolio' => $portafolio->id_portafolio,
-                'id_plantilla' => $portafolio->id_plantilla,
-                'fecha_act' => $portafolio->fecha_act,
-                'plantilla' => $portafolio->plantilla,
+                'id_plantilla'  => $portafolio->id_plantilla,
+                'fecha_act'     => $portafolio->fecha_act,
+                'plantilla'     => $portafolio->plantilla,
             ]
         ], 200);
     }

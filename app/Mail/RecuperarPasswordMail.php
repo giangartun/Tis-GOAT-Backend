@@ -22,10 +22,7 @@ class RecuperarPasswordMail extends Mailable
     public function __construct($token)
     {
         $this->token = $token;
-        
-        // Esta es la URL que el usuario verá en el botón del correo
-        // Cámbiala si tu frontend usa un puerto o ruta diferente
-        $this->url = "http://localhost:5173/reset-password?token=" . $token;
+        $this->url = rtrim(env('FRONTEND_URL'), '/') . '/reset-password?token=' . $token;
     }
 
     /**

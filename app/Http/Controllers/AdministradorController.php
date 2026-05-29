@@ -622,6 +622,24 @@ class AdministradorController extends Controller
         ]);
     }
 
+    public function listarAnunciosPublico(Request $request)
+    {
+
+        $anuncios = Anuncio::orderBy('creado_en', 'desc')->get();
+
+        return response()->json([
+            'total'    => $anuncios->count(),
+            'anuncios' => $anuncios->map(fn($a) => [
+                'id_anuncio'      => $a->id_anuncio,
+                'titulo'          => $a->titulo,
+                'descripcion'     => $a->descripcion,
+                'foto_url'        => $a->foto_url,
+                'url_redireccion' => $a->url_redireccion,
+                'creado_en'       => $a->creado_en,
+            ]),
+        ]);
+    }
+
     public function crearAnuncio(Request $request)
     {
         if ($request->user()->tipo_usuario !== 'admin') {
@@ -684,7 +702,7 @@ class AdministradorController extends Controller
             return response()->json(['message' => 'Anuncio no encontrado.'], 404);
         }
 
-        if (!$request->hasAny(['titulo', 'descripcion', 'url_redireccion']) && !$request->hasFile('foto')) {
+        if (!$request->hasAny(['titulo', 'descripcion', 'url_redireccion', 'eliminar_foto']) && !$request->hasFile('foto')) {
             return response()->json([
                 'message' => 'Debes enviar al menos un campo para actualizar.',
             ], 422);
@@ -695,28 +713,38 @@ class AdministradorController extends Controller
             'descripcion'     => 'nullable|string',
             'foto'            => 'nullable|image|max:5120|mimes:jpg,jpeg,png,webp',
             'url_redireccion' => 'sometimes|required|url|max:255',
+            'eliminar_foto'   => 'sometimes|in:0,1',
         ]);
 
-        // Si sube nueva foto, elimina la anterior de Cloudinary y sube la nueva
         if ($request->hasFile('foto')) {
+            // Reemplazar foto: eliminar anterior y subir nueva
             if ($anuncio->foto_url) {
-                $path = parse_url($anuncio->foto_url, PHP_URL_PATH);
-                preg_match('/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/', $path, $matches);
-                $publicId = $matches[1] ?? null;
-
-                if ($publicId) {
-                    Cloudinary::uploadApi()->destroy($publicId, ['resource_type' => 'image']);
-                }
+                $this->eliminarDeCloudinary($anuncio->foto_url);
             }
 
-            $upload           = Cloudinary::uploadApi()->upload($request->file('foto')->getRealPath(), [
-                'folder' => 'anuncios',
-            ]);
-            $anuncio->foto_url = $upload['secure_url'];
+            try {
+                $upload = Cloudinary::uploadApi()->upload(
+                    $request->file('foto')->getRealPath(),
+                    ['folder' => 'anuncios']
+                );
+                $anuncio->foto_url = $upload['secure_url'];
+            } catch (\Exception $e) {
+                \Log::error('Error subiendo imagen a Cloudinary: ' . $e->getMessage());
+                return response()->json([
+                    'message' => 'Error al subir la imagen. Intenta nuevamente.',
+                ], 500);
+            }
+
+        } elseif ($request->input('eliminar_foto') === '1') {
+            // Eliminar foto sin subir nueva
+            if ($anuncio->foto_url) {
+                $this->eliminarDeCloudinary($anuncio->foto_url);
+            }
+            $anuncio->foto_url = null;
         }
 
         if ($request->filled('titulo'))          $anuncio->titulo          = $request->titulo;
-        if ($request->filled('descripcion'))     $anuncio->descripcion     = $request->descripcion;
+        if ($request->has('descripcion'))        $anuncio->descripcion     = $request->descripcion ?: null;
         if ($request->filled('url_redireccion')) $anuncio->url_redireccion = $request->url_redireccion;
 
         $anuncio->save();
@@ -746,20 +774,40 @@ class AdministradorController extends Controller
             return response()->json(['message' => 'Anuncio no encontrado.'], 404);
         }
 
-        // Eliminar imagen de Cloudinary si existe
         if ($anuncio->foto_url) {
-            $path = parse_url($anuncio->foto_url, PHP_URL_PATH);
-            preg_match('/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/', $path, $matches);
-            $publicId = $matches[1] ?? null;
-
-            if ($publicId) {
-                Cloudinary::uploadApi()->destroy($publicId, ['resource_type' => 'image']);
-            }
+            $this->eliminarDeCloudinary($anuncio->foto_url);
         }
 
         $anuncio->delete();
 
         return response()->json(['message' => 'Anuncio eliminado correctamente.']);
+    }
+
+    // Método privado reutilizable
+    private function eliminarDeCloudinary(string $fotoUrl): void
+    {
+        try {
+            $path = parse_url($fotoUrl, PHP_URL_PATH);
+
+            if (!$path) {
+                \Log::warning('Cloudinary: URL inválida al intentar eliminar: ' . $fotoUrl);
+                return;
+            }
+
+            preg_match('/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/', $path, $matches);
+            $publicId = $matches[1] ?? null;
+
+            if (!$publicId) {
+                \Log::warning('Cloudinary: No se pudo extraer el public_id de: ' . $path);
+                return;
+            }
+
+            Cloudinary::uploadApi()->destroy($publicId, ['resource_type' => 'image']);
+
+        } catch (\Exception $e) {
+            // Solo loguea — no interrumpe el flujo principal
+            \Log::error('Error eliminando imagen de Cloudinary: ' . $e->getMessage());
+        }
     }
 
 }

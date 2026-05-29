@@ -35,6 +35,8 @@ Route::prefix('usuario')->group(function () {
  * SE DEBE ANALIZAR CUAL REQUIERE SI UN TOKEN Y CUALES NO, ES MAS CONTROL INTERNO Y DE QUE ES LO QUE REALMENTE QUIERE SU FRONTEND
  */
 
+Route::get('/anuncios/home', [AdministradorController::class, 'listarAnunciosPublico']);
+
 // --- Rutas de Plantillas ---
 // Catálogo público para que el usuario elija
 Route::get('plantillas/catalogo', [App\Http\Controllers\PlantillaController::class, 'index']);

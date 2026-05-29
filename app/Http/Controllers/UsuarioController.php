@@ -123,6 +123,7 @@ class UsuarioController extends Controller
 
             //Crear portafolio
             $portafolio = Portafolio::create([
+                'id_portafolio' => (string) \Illuminate\Support\Str::ulid(),
                 'id_usuario' => $usuario->id_usuario,
                 'id_plantilla' => null,
                 'enlace_pagi_web' => $urlCompleta,

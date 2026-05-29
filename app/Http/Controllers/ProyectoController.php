@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\RedesProfesionales;
 use Illuminate\Support\Str;
 
-class RedesProfesionalesController extends Controller
+class ProyectoController extends Controller
 {
     // Obtener redes de un usuario
     public function index($id_usuario)

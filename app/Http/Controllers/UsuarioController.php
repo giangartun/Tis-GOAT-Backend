@@ -115,7 +115,22 @@ class UsuarioController extends Controller
             //Crear usuario
             $datos['fecha'] = now();
             $usuario = Usuario::create($datos);
-            
+
+            $codigo = substr($usuario->id_usuario, 0, 6);
+            $nombre = Str::slug($usuario->nombre . '-' . $usuario->apellido_paterno);
+            $frontend = rtrim(env('FRONTEND_URL'), '/'); 
+            $urlCompleta = $frontend . '/' . $codigo . '/' . $nombre;
+
+            //Crear portafolio
+            $portafolio = Portafolio::create([
+                'id_usuario' => $usuario->id_usuario,
+                'id_plantilla' => null,
+                'enlace_pagi_web' => $urlCompleta,
+                'visible' => true,
+                'creado_en' => now(),
+                'fecha_act' => now(),
+            ]);
+
             RegistroActividadHelper::registrar($usuario->id_usuario, 'cuenta_creada', [
                 'tabla_principal_afectada'          => 'usuario',
                 'tablas_creadas' => ['usuario', 'portafolio'],  
@@ -134,21 +149,6 @@ class UsuarioController extends Controller
                     'enlace_pagi_web' => $portafolio->enlace_pagi_web,
                     'visible'         => $portafolio->visible,
                 ],
-            ]);
-
-            $codigo = substr($usuario->id_usuario, 0, 6);
-            $nombre = Str::slug($usuario->nombre . '-' . $usuario->apellido_paterno);
-            $frontend = rtrim(env('FRONTEND_URL'), '/'); 
-            $urlCompleta = $frontend . '/' . $codigo . '/' . $nombre;
-
-            //Crear portafolio
-            $portafolio = Portafolio::create([
-                'id_usuario' => $usuario->id_usuario,
-                'id_plantilla' => null,
-                'enlace_pagi_web' => $urlCompleta,
-                'visible' => true,
-                'creado_en' => now(),
-                'fecha_act' => now(),
             ]);
 
             DB::commit();

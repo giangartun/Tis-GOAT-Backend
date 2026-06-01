@@ -3,109 +3,134 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\RegistroActividadHelper;
+use App\Models\Proyecto;
+use App\Models\Tecnologia;
+use App\Models\Portafolio;
+use App\Http\Requests\ProyectoStoreRequest; 
 use Illuminate\Http\Request;
-use App\Models\RedesProfesionales;
-use Illuminate\Support\Str;
 
 class ProyectoController extends Controller
 {
-    // Obtener redes de un usuario
-    public function index($id_usuario)
+    // 1. LISTAR TECNOLOGIAS (Llena el selector del Front)
+    public function listarTecnologias()
     {
-        $redes = RedesProfesionales::where('id_usuario', $id_usuario)->get();
-
-        return response()->json($redes);
+        // Trae todas las tecnologías (id, nombre, categoria)
+        $tecnologias = Tecnologia::all();
+        return response()->json($tecnologias, 200);
     }
 
-    // Crear red profesional
-    public function store(Request $request)
+    // 2. LISTAR PROYECTOS (Con buscador integrado y carga de evidencias)
+    public function index(Request $request, $id_portafolio)
     {
-        $request->validate([
-            'id_usuario'  => 'required|string|exists:usuario,id_usuario',
-            'nombre_red'  => 'required|string|max:100|in:linkedin,github,gitlab,leetcode,hackerrank,kaggle,instagram,facebook,twitter',
-            'url_red'     => 'required|url|max:500',
-        ]);
+        // Creamos la base de la consulta cargando sus tecnologías y evidencias asociadas
+        $query = Proyecto::with(['tecnologias', 'evidencias'])
+            ->where('id_portafolio', $id_portafolio);
 
-        $existe = RedesProfesionales::where('id_usuario', $request->id_usuario)
-            ->where('nombre_red', $request->nombre_red)
-            ->exists();
-
-        if ($existe) {
-            return response()->json([
-                'message' => 'Ya tienes registrada esta red profesional'
-            ], 409);
+        // Si el usuario escribió algo en el buscador (?buscar=...)
+        if ($request->has('buscar') && !empty($request->buscar)) {
+            $termino = $request->buscar;
+            
+            // Usamos una función anidada para que el "OR" no rompa el filtro del id_portafolio
+            $query->where(function($q) use ($termino) {
+                $q->where('nombre', 'LIKE', '%' . $termino . '%')
+                  ->orWhere('descripcion', 'LIKE', '%' . $termino . '%');
+            });
         }
 
-        $red = RedesProfesionales::create([
-            'id_redes_prof' => (string) Str::ulid(),
-            'id_usuario'    => $request->id_usuario,
-            'nombre_red'    => $request->nombre_red,
-            'url_red'       => $request->url_red,
-        ]);
+        $proyectos = $query->get();
+        return response()->json($proyectos, 200);
+    }
 
-        RegistroActividadHelper::registrar($request->id_usuario, 'modificacion_redes_sociales', [
-            'tabla'          => 'redes_profesionales',
-            'accion'         => 'creacion',
-            'id_afectado'    => $red->id_redes_prof,
-            'registro_nuevo' => [
-                'nombre_red' => $red->nombre_red,
-                'url_red'    => $red->url_red,
-            ],
-        ]);
+    // 3. CREAR (POST): Vincula tecnologías generando ULIDs para la tabla intermedia
+    public function store(ProyectoStoreRequest $request)
+    {
+        // Seguridad: Verificar pertenencia del portafolio
+        $portafolio = Portafolio::where('id_portafolio', $request->id_portafolio)
+            ->where('id_usuario', $request->user()->id_usuario)
+            ->first();
+
+        if (!$portafolio) {
+            return response()->json(['message' => 'No tienes permisos para alterar este portafolio.'], 403);
+        }
+
+        $datos = $request->validated();
+        $id_proyecto = (string) \Illuminate\Support\Str::ulid();
+        $datos['id_proyecto'] = $id_proyecto; 
+
+        $proyecto = Proyecto::create($datos);
+
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_proyectos');
+
+        // Lógica especial para la tabla pivote con ULIDs
+        if ($request->has('tecnologias') && !empty($request->tecnologias)) {
+            $tecnologiasConId = [];
+            foreach ($request->tecnologias as $tecId) {
+                $tecnologiasConId[$tecId] = [
+                    'id_proyecto_tecnologia' => (string) \Illuminate\Support\Str::ulid()
+                ];
+            }
+            $proyecto->tecnologias()->attach($tecnologiasConId);
+        }
 
         return response()->json([
-            'message' => 'Red profesional agregada',
-            'red'     => $red
+            'message' => 'Proyecto creado exitosamente',
+            'proyecto' => $proyecto->load('tecnologias')
         ], 201);
     }
 
-    // Actualizar red profesional
-    public function update(Request $request, $id)
+    // 4. EDITAR (PUT): Sincroniza limpiando y regenerando ULIDs
+    public function update(ProyectoStoreRequest $request, $id)
     {
-        $red = RedesProfesionales::findOrFail($id);
+        $proyecto = Proyecto::findOrFail($id);
+        
+        // Seguridad: Verificar pertenencia
+        $portafolio = Portafolio::where('id_portafolio', $proyecto->id_portafolio)
+            ->where('id_usuario', $request->user()->id_usuario)
+            ->first();
 
-        $request->validate([
-            'nombre_red' => 'sometimes|string|in:linkedin,github,gitlab,leetcode,hackerrank,kaggle,instagram,facebook,twitter',
-            'url_red'    => 'sometimes|url|max:500',
-        ]);
+        if (!$portafolio) {
+            return response()->json(['message' => 'Acceso denegado.'], 403);
+        }
 
-        $anterior = $red->only(['nombre_red', 'url_red']);
+        $proyecto->update($request->validated());
 
-        $red->update($request->only(['nombre_red', 'url_red']));
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_proyectos');
 
-        RegistroActividadHelper::registrar($red->id_usuario, 'modificacion_redes_sociales', [
-            'tabla'              => 'redes_profesionales',
-            'accion'             => 'actualizacion',
-            'id_afectado'        => $red->id_redes_prof,
-            'registro_anterior'  => $anterior,
-            'registro_nuevo'     => $red->only(['nombre_red', 'url_red']),
-        ]);
+        if ($request->has('tecnologias')) {
+            $tecnologiasConId = [];
+            foreach ($request->tecnologias as $tecId) {
+                $tecnologiasConId[$tecId] = [
+                    'id_proyecto_tecnologia' => (string) \Illuminate\Support\Str::ulid()
+                ];
+            }
+            $proyecto->tecnologias()->sync($tecnologiasConId);
+        }
 
         return response()->json([
-            'message' => 'Red profesional actualizada',
-            'red'     => $red
-        ]);
+            'message' => 'Proyecto actualizado correctamente',
+            'proyecto' => $proyecto->load('tecnologias')
+        ], 200);
     }
 
-    // Eliminar red profesional
-    public function destroy($id)
+    // 5. ELIMINAR (DELETE)
+    public function destroy(Request $request, $id)
     {
-        $red = RedesProfesionales::where('id_redes_prof', $id)->firstOrFail();
+        $proyecto = Proyecto::findOrFail($id);
 
-        RegistroActividadHelper::registrar($red->id_usuario, 'modificacion_redes_sociales', [
-            'tabla'              => 'redes_profesionales',
-            'accion'             => 'eliminacion',
-            'id_afectado'        => $red->id_redes_prof,
-            'registro_anterior'  => [  
-                'nombre_red' => $red->nombre_red,
-                'url_red'    => $red->url_red,
-            ],
-        ]);
+        $portafolio = Portafolio::where('id_portafolio', $proyecto->id_portafolio)
+            ->where('id_usuario', $request->user()->id_usuario)
+            ->first();
 
-        $red->delete();
+        if (!$portafolio) {
+            return response()->json(['message' => 'Acceso denegado.'], 403);
+        }
+
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_proyectos');
+
+        $proyecto->delete();
 
         return response()->json([
-            'message' => 'Red profesional eliminada'
-        ]);
+            'message' => 'Proyecto eliminado correctamente'
+        ], 200);
     }
 }

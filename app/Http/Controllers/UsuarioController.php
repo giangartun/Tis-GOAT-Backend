@@ -241,7 +241,7 @@ class UsuarioController extends Controller
         ], 200);
     }
 
-// HU12: Generar token de recuperación y enviar email a través de n8n
+// HU12: Generar token de recuperación y enviar email con formato y token dinámico
     public function enviarEnlaceReset(Request $request)
     {
         // 1. Valida que el email exista en la tabla 'usuario'
@@ -268,18 +268,22 @@ class UsuarioController extends Controller
                 ]
             );
 
-            // 3. NUEVO: Configuramos el correo usando la Mailable para generar el HTML completo (con el enlace incluido)
-            $htmlCorreoCompleto = (new RecuperarPasswordMail($token))->render();
+            // 3. Renderizamos el molde original (aquí Laravel ya le inyecta el TOKEN único al HTML)
+            $htmlOriginal = (new RecuperarPasswordMail($token))->render();
 
-            // 4. NUEVO: Le disparamos los datos a la webhook de n8n Cloud (con URL
+            // 4. Convertimos los estilos del <style> en estilos 'inline' para que Gmail no los borre
+            $converter = new \TijsVerkoyen\CssToInlineStyles\CssToInlineStyles();
+            $htmlCorreoCompleto = $converter->convert($htmlOriginal);
+
+            // 5. Enviamos el correo personalizado e inmune a bloqueos de Gmail hacia n8n
             Http::timeout(5)
                 ->when(app()->environment('local'), fn($http) => $http->withoutVerifying())
-                ->post("https://goattis.app.n8n.cloud/webhook/recuperar-password", [
+                ->post("https://goattis.app.n8n.cloud/webhook-test/recuperar-password", [
                     'email' => $email,
                     'html'  => $htmlCorreoCompleto
                 ]);
 
-            // 5. Responde de inmediato al Frontend
+            // 6. Respuesta instantánea al Frontend
             return response()->json([
                 'message' => 'Se ha enviado un enlace de recuperación a tu correo.'
             ], 200);

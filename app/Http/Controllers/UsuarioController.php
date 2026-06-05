@@ -241,7 +241,7 @@ class UsuarioController extends Controller
         ], 200);
     }
 
-    // HU12: Generar token de recuperación y enviar email
+// HU12: Generar token de recuperación y enviar email a través de n8n
     public function enviarEnlaceReset(Request $request)
     {
         // 1. Valida que el email exista en la tabla 'usuario'
@@ -260,7 +260,6 @@ class UsuarioController extends Controller
 
         try {
             // 2. Guardamos en la tabla migrada (password_reset_tokens)
-            // Si ya pidió uno antes, se actualiza el token y la fecha
             DB::table('password_reset_tokens')->updateOrInsert(
                 ['email' => $email],
                 [
@@ -269,9 +268,18 @@ class UsuarioController extends Controller
                 ]
             );
 
-            // 3. Enviamos el correo (usando el SMTP)
-            Mail::to($email)->send(new RecuperarPasswordMail($token));
+            // 3. NUEVO: Configuramos el correo usando la Mailable para generar el HTML completo (con el enlace incluido)
+            $htmlCorreoCompleto = (new RecuperarPasswordMail($token))->render();
 
+            // 4. NUEVO: Le disparamos los datos a la webhook de n8n Cloud (con URL
+            Http::timeout(5)
+                ->when(app()->environment('local'), fn($http) => $http->withoutVerifying())
+                ->post("https://goattis.app.n8n.cloud/webhook/recuperar-password", [
+                    'email' => $email,
+                    'html'  => $htmlCorreoCompleto
+                ]);
+
+            // 5. Responde de inmediato al Frontend
             return response()->json([
                 'message' => 'Se ha enviado un enlace de recuperación a tu correo.'
             ], 200);

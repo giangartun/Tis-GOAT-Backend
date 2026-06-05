@@ -278,7 +278,7 @@ class UsuarioController extends Controller
             // 5. Enviamos el correo personalizado e inmune a bloqueos de Gmail hacia n8n
             Http::timeout(5)
                 ->when(app()->environment('local'), fn($http) => $http->withoutVerifying())
-                ->post("https://goattis.app.n8n.cloud/webhook-test/recuperar-password", [
+                ->post("https://goattis.app.n8n.cloud/webhook/recuperar-password", [
                     'email' => $email,
                     'html'  => $htmlCorreoCompleto
                 ]);

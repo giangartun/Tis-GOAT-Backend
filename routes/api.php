@@ -93,6 +93,7 @@ Route::prefix('proyecto/gestion-proyectos')->middleware('auth:sanctum')->group(f
 Route::prefix('portafolios')->group(function () {
     Route::get('/publicos', [PortafolioController::class, 'index']);
     Route::get('/{id}',     [PortafolioController::class, 'show']);
+    Route::get('/publico/{id}', [PortafolioController::class, 'showPublico']);
 });
 
 // --- Rutas de Evidencias ---

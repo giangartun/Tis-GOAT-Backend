@@ -9,15 +9,18 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+public function up(): void
     {
         Schema::create('password_reset_tokens', function (Blueprint $table) {
-            // Usamos el email como identificador principal
             $table->string('email')->primary();
-            // El token aleatorio que enviaremos por correo
             $table->string('token');
-            // La fecha de creación para saber cuándo expira el enlace
             $table->timestamp('created_at')->nullable();
+
+            // NUEVO: Relación en cascada con el email del usuario
+            $table->foreign('email')
+                ->references('email')
+                ->on('usuario')
+                ->onDelete('cascade');
         });
     }
 

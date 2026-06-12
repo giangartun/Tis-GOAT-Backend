@@ -6,34 +6,30 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 
-class RegistroActividad extends Model
+class Anuncio extends Model
 {
     use HasFactory, HasUlids;
 
-    protected $table = 'registro_actividad';
-    protected $primaryKey = 'id_registro';
+    protected $table = 'anuncio';
+    protected $primaryKey = 'id_anuncio';
     public $incrementing = false;
     protected $keyType = 'string';
     public $timestamps = false;
 
     protected $fillable = [
-        'id_usuario',
-        'evento',
-        'fecha_hr',
+        'titulo',
+        'descripcion',
+        'foto_url',
+        'url_redireccion',
+        'creado_en',
     ];
 
     protected $casts = [
-        'fecha_hr' => 'datetime',
+        'creado_en' => 'datetime',
     ];
 
     public function uniqueIds(): array
     {
-        return ['id_registro'];
-    }
-
-    // Un registro pertenece a un usuario
-    public function usuario()
-    {
-        return $this->belongsTo(Usuario::class, 'id_usuario');
+        return ['id_anuncio'];
     }
 }

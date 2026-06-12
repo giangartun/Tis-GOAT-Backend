@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\RegistroActividadHelper;
 use Illuminate\Http\Request;
 use App\Models\RedesProfesionales;
 use Illuminate\Support\Str;
@@ -21,11 +22,10 @@ class RedesProfesionalesController extends Controller
     {
         $request->validate([
             'id_usuario'  => 'required|string|exists:usuario,id_usuario',
-            'nombre_red'  => 'required|string|max:100|in:linkedin,github,twitter,behance,otro',
+            'nombre_red'  => 'required|string|max:100|in:linkedin,github,gitlab,leetcode,hackerrank,kaggle,instagram,facebook,twitter',
             'url_red'     => 'required|url|max:500',
         ]);
 
-        // Verificar que no tenga ya esa red registrada
         $existe = RedesProfesionales::where('id_usuario', $request->id_usuario)
             ->where('nombre_red', $request->nombre_red)
             ->exists();
@@ -43,6 +43,16 @@ class RedesProfesionalesController extends Controller
             'url_red'       => $request->url_red,
         ]);
 
+        RegistroActividadHelper::registrar($request->id_usuario, 'modificacion_redes_sociales', [
+            'tabla'          => 'redes_profesionales',
+            'accion'         => 'creacion',
+            'id_afectado'    => $red->id_redes_prof,
+            'registro_nuevo' => [
+                'nombre_red' => $red->nombre_red,
+                'url_red'    => $red->url_red,
+            ],
+        ]);
+
         return response()->json([
             'message' => 'Red profesional agregada',
             'red'     => $red
@@ -55,11 +65,21 @@ class RedesProfesionalesController extends Controller
         $red = RedesProfesionales::findOrFail($id);
 
         $request->validate([
-            'nombre_red' => 'sometimes|string|in:linkedin,github,twitter,behance,otro',
+            'nombre_red' => 'sometimes|string|in:linkedin,github,gitlab,leetcode,hackerrank,kaggle,instagram,facebook,twitter',
             'url_red'    => 'sometimes|url|max:500',
         ]);
 
+        $anterior = $red->only(['nombre_red', 'url_red']);
+
         $red->update($request->only(['nombre_red', 'url_red']));
+
+        RegistroActividadHelper::registrar($red->id_usuario, 'modificacion_redes_sociales', [
+            'tabla'              => 'redes_profesionales',
+            'accion'             => 'actualizacion',
+            'id_afectado'        => $red->id_redes_prof,
+            'registro_anterior'  => $anterior,
+            'registro_nuevo'     => $red->only(['nombre_red', 'url_red']),
+        ]);
 
         return response()->json([
             'message' => 'Red profesional actualizada',
@@ -71,6 +91,17 @@ class RedesProfesionalesController extends Controller
     public function destroy($id)
     {
         $red = RedesProfesionales::where('id_redes_prof', $id)->firstOrFail();
+
+        RegistroActividadHelper::registrar($red->id_usuario, 'modificacion_redes_sociales', [
+            'tabla'              => 'redes_profesionales',
+            'accion'             => 'eliminacion',
+            'id_afectado'        => $red->id_redes_prof,
+            'registro_anterior'  => [   
+                'nombre_red' => $red->nombre_red,
+                'url_red'    => $red->url_red,
+            ],
+        ]);
+
         $red->delete();
 
         return response()->json([

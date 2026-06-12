@@ -23,7 +23,9 @@ class Evidencia extends Model
         'foto_url',
         'tamano_bytes',
         'fecha_subida',
-        'id_proyecto'
+        'id_proyecto',
+        'id_experiencia_academica',
+        'id_experiencia_laboral'
     ];
 
     protected $casts = [
@@ -39,5 +41,17 @@ class Evidencia extends Model
     public function proyecto()
     {
         return $this->belongsTo(Proyecto::class, 'id_proyecto');
+    }
+
+    // --- NUEVAS RELACIONES ---
+
+    public function experienciaAcademica()
+    {
+        return $this->belongsTo(ExperienciaAcademica::class, 'id_experiencia_academica');
+    }
+
+    public function experienciaLaboral()
+    {
+        return $this->belongsTo(ExperienciaLaboral::class, 'id_experiencia_laboral');
     }
 }

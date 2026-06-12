@@ -6,27 +6,31 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 
-class RedesProfesionales extends Model
+class RegistroActividad extends Model
 {
     use HasFactory, HasUlids;
 
-    protected $table = 'redes_profesionales';
-    protected $primaryKey = 'id_redes_prof';
+    protected $table = 'registro_actividad';
+    protected $primaryKey = 'id_registro';
     public $incrementing = false;
     protected $keyType = 'string';
     public $timestamps = false;
 
     protected $fillable = [
         'id_usuario',
-        'nombre_red',
-        'url_red',
-        'id_usuario',
-        'visible'
+        'evento',
+        'fecha_hr',
+        'contexto',
+    ];
+
+    protected $casts = [
+        'fecha_hr' => 'datetime',
+        'contexto' => 'array',
     ];
 
     public function uniqueIds(): array
     {
-        return ['id_redes_prof'];
+        return ['id_registro'];
     }
 
     public function usuario()

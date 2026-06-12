@@ -1,0 +1,158 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Helpers\RegistroActividadHelper;
+use Illuminate\Http\Request;
+use App\Models\ExperienciaAcademica;
+use App\Models\Portafolio;
+use Illuminate\Support\Facades\Validator;
+
+class ExperienciaAcademicaController extends Controller
+{
+    public function index($id_portafolio)
+    {
+        $academicas = ExperienciaAcademica::where('id_portafolio', $id_portafolio)
+            ->with('evidencias')
+            ->orderBy('fecha_ini', 'desc')
+            ->get();
+
+        return response()->json($academicas, 200);
+    }
+
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id_portafolio' => 'required|exists:portafolio,id_portafolio',
+            'institucion'   => 'required|string|max:150',
+            'titulo'        => 'required|string|max:150',
+            'descripcion'   => 'nullable|string',
+            'fecha_ini'     => 'required|date',
+            'fecha_fin'     => 'nullable|date|after_or_equal:fecha_ini',
+            'visible'       => 'boolean'
+        ], [
+            'fecha_fin.after_or_equal' => 'La fecha de finalización no puede ser anterior a la de inicio.',
+            'id_portafolio.exists'     => 'El portafolio especificado no existe.'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        $portafolio = Portafolio::where('id_portafolio', $request->id_portafolio)
+            ->where('id_usuario', $request->user()->id_usuario)
+            ->first();
+
+        if (!$portafolio) {
+            return response()->json(['message' => 'No tienes permisos para alterar este portafolio.'], 403);
+        }
+
+        $academica = ExperienciaAcademica::create($request->all());
+
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_academica', [
+            'tabla'          => 'experiencia_academica',
+            'accion'         => 'creacion',
+            'id_afectado'    => $academica->id_experiencia_academica,
+            'registro_nuevo' => [
+                'institucion' => $academica->institucion,
+                'titulo'      => $academica->titulo,
+                'descripcion' => $academica->descripcion,
+                'fecha_ini'   => $academica->fecha_ini,
+                'fecha_fin'   => $academica->fecha_fin,
+                'visible'     => $academica->visible,
+            ],
+        ]);
+
+        return response()->json([
+            'message' => 'Formación académica registrada con éxito.',
+            'data'    => $academica
+        ], 201);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $academica = ExperienciaAcademica::find($id);
+
+        if (!$academica) {
+            return response()->json(['message' => 'Registro no encontrado.'], 404);
+        }
+
+        $portafolio = Portafolio::where('id_portafolio', $academica->id_portafolio)
+            ->where('id_usuario', $request->user()->id_usuario)
+            ->first();
+
+        if (!$portafolio) {
+            return response()->json(['message' => 'Acceso denegado.'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'institucion' => 'sometimes|required|string|max:150',
+            'titulo'      => 'sometimes|required|string|max:150',
+            'descripcion' => 'nullable|string',
+            'fecha_ini'   => 'sometimes|required|date',
+            'fecha_fin'   => 'nullable|date|after_or_equal:fecha_ini',
+            'visible'     => 'boolean'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        // capturar ANTES de modificar
+        $anterior = $academica->only([
+            'institucion', 'titulo', 'descripcion', 'fecha_ini', 'fecha_fin', 'visible'
+        ]);
+
+        $academica->update($request->all());
+
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_academica', [
+            'tabla'             => 'experiencia_academica',
+            'accion'            => 'actualizacion',
+            'id_afectado'       => $academica->id_experiencia_academica,
+            'registro_anterior' => $anterior,
+            'registro_nuevo'    => $academica->only([
+                'institucion', 'titulo', 'descripcion', 'fecha_ini', 'fecha_fin', 'visible'
+            ]),
+        ]);
+
+        return response()->json([
+            'message' => 'Formación académica actualizada con éxito.',
+            'data'    => $academica
+        ], 200);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $academica = ExperienciaAcademica::find($id);
+
+        if (!$academica) {
+            return response()->json(['message' => 'Registro no encontrado.'], 404);
+        }
+
+        $portafolio = Portafolio::where('id_portafolio', $academica->id_portafolio)
+            ->where('id_usuario', $request->user()->id_usuario)
+            ->first();
+
+        if (!$portafolio) {
+            return response()->json(['message' => 'Acceso denegado.'], 403);
+        }
+
+        RegistroActividadHelper::registrar($request->user()->id_usuario, 'modificacion_experiencia_academica', [
+            'tabla'             => 'experiencia_academica',
+            'accion'            => 'eliminacion',
+            'id_afectado'       => $academica->id_experiencia_academica,
+            'registro_anterior' => [
+                'institucion' => $academica->institucion,
+                'titulo'      => $academica->titulo,
+                'descripcion' => $academica->descripcion,
+                'fecha_ini'   => $academica->fecha_ini,
+                'fecha_fin'   => $academica->fecha_fin,
+                'visible'     => $academica->visible,
+            ],
+        ]);
+
+        $academica->delete();
+
+        return response()->json(['message' => 'Formación académica eliminada correctamente.'], 200);
+    }
+}

@@ -22,6 +22,7 @@ class ExperienciaAcademica extends Model
         'descripcion',
         'fecha_ini',
         'fecha_fin',
+        'visible',
         'id_portafolio'
     ];
 
@@ -38,5 +39,10 @@ class ExperienciaAcademica extends Model
     public function portafolio()
     {
         return $this->belongsTo(Portafolio::class, 'id_portafolio');
+    }
+    public function evidencias()
+    {
+    // Una experiencia académica puede tener muchas evidencias
+    return $this->hasMany(Evidencia::class, 'id_experiencia_academica', 'id_experiencia_academica');
     }
 }

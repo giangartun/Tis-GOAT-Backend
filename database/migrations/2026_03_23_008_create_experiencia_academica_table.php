@@ -15,6 +15,7 @@ return new class extends Migration
             $table->text('descripcion')->nullable();
             $table->date('fecha_ini');
             $table->date('fecha_fin')->nullable();
+            $table->boolean('visible')->default(true);
             $table->string('id_portafolio');
             
             $table->foreign('id_portafolio')

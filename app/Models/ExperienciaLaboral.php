@@ -22,6 +22,7 @@ class ExperienciaLaboral extends Model
         'descripcion',
         'fecha_ini',
         'fecha_fin',
+        'visible',
         'id_portafolio'
     ];
 
@@ -38,5 +39,11 @@ class ExperienciaLaboral extends Model
     public function portafolio()
     {
         return $this->belongsTo(Portafolio::class, 'id_portafolio');
+    }
+
+    public function evidencias()
+    {
+    // Una experiencia laboral puede tener muchas evidencias
+    return $this->hasMany(Evidencia::class, 'id_experiencia_laboral', 'id_experiencia');
     }
 }
